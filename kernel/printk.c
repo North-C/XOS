@@ -1,8 +1,8 @@
-#include <linux/linkage.h>
+// #include <linux/linkage.h>
 
 
-asmlinkage int printk(const char *fmt, ...)
-{
+// asmlinkage int printk(const char *fmt, ...)
+// {
     
 
-}
+// }

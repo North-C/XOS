@@ -1,59 +1,59 @@
-# target macros
-TARGET := kernel# FILL: target filename
-MAIN_SRC := # FILL: src file which contains `main()`
+#!Makefile
+C_SOURCES = $(shell find . -name "*.c")
+C_OBJECTS = $(patsubst %.c, %.o, $(C_SOURCES))
+S_SOURCES = $(shell find . -name "*.s")
+S_OBJECTS = $(patsubst %.s, %.o, $(S_SOURCES))
 
-# compile macros
-DIRS := boot init# FILL: only the dirs which contain the src files, in this case, `src` should be added
-OBJS := # FILL: only the objects in current dir, and do not include the one contains `main()`
+CC = gcc
+LD = ld
+ASM = nasm
 
-# intermedia compile macros
-# NOTE: ALL_OBJS are intentionally left blank, no need to fill it
-ALL_OBJS :=
+C_FLAGS = -I ./include/ -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2
+LD_FLAGS = -T scripts/kernel.ld -m elf_i386 -nostdlib -Map ./build/kernel.map
+ASM_FLAGS = -f elf -g -F stabs
 
-DIST_CLEAN_FILES := $(OBJS)
+all: $(S_OBJECTS) $(C_OBJECTS) link update_image
 
-# recursive wildcard 循环通配
-rwildcard=$(foreach d,$(wildcard $(addsuffix *,$(1))),$(call rwildcard,$(d)/,$(2))$(filter $(subst *,%,$(2)),$(d)))
+.c.o:
+	@echo 编译代码文件 $< ...
+	$(CC) $(C_FLAGS) $< -o $@
+	
+.s.o:
+	@echo 编译汇编文件 $< ...
+	$(ASM) $(ASM_FLAGS) $<
 
-# default target
-default: show-info all
+link:
+	@echo 链接内核文件...
+	$(LD) $(LD_FLAGS) $(S_OBJECTS) $(C_OBJECTS) -o kernel.bin
 
-# non-phony targets
-$(TARGET): build-subdirs
-	@echo -e "\t" CC $(CCFLAGS) $(ALL_OBJS) $(MAIN_SRC) -o $@
+.PHONY:clean
+clean:
+	$(RM) $(S_OBJECTS) $(C_OBJECTS) kernel.bin
 
-# phony funcs
-.PHONY: find-all-objs
-find-all-objs:
-	$(eval ALL_OBJS += $(call rwildcard,./build,*.o))
-
-# phony targets
-.PHONY: all
-all: $(TARGET) find-all-objs build/kernel.bin
-	@echo Target $(TARGET) build finished.
-	cp ./build/kernel.bin ./hdisk/boot/kernel.bin
-	sync
+.PHONY:update_image
+update_image:
+	cp kernel.bin ./hdisk/boot/
 	sleep 1
 
-build/kernel.bin: $(ALL_OBJS)
-	@echo ${ALL_OBJS}
-	#nasm -f elf ./boot/grub_head.S -o ./build/grub_head.o
-	${LD} ${LDFLAGS} $(ALL_OBJS) -o $@
+.PHONY:mount_image
+mount_image:
+	mount -o loop ./hda.img ./hdisk/
 
-.PHONY: clean
-clean:
-	cd ./build && rm -f ./*
+.PHONY:umount_image
+umount_image:
+	umount ./hdisk
 
+.PHONY:qemu
+qemu:
+	qemu-system-i386  -serial stdio -s -S -drive file=./hda.img,format=raw,index=0,media=disk -m 512
 
-.PHONY: show-info
-show-info:
-	@echo Building Project
+# .PHONY:bochs
+# bochs:
+#     bochs -f tools/bochsrc.txt
 
-.PHONY: debug
-	
-# need to be placed at the end of the file
-mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-export PROJECT_PATH := $(patsubst %/,%,$(dir $(mkfile_path)))
-export MAKE_INCLUDE=$(PROJECT_PATH)/config/make.global
-export SUB_MAKE_INCLUDE=$(PROJECT_PATH)/config/submake.global
-include $(MAKE_INCLUDE)
+.PHONY:debug
+debug:
+    #qemu-system-i386  -serial stdio -s -S -drive file=./hda.img,format=raw,index=0,media=disk -m 512
+    #sleep 1
+	gdb -x ./gdbinit
+

@@ -1,23 +1,24 @@
-make --dry-run --always-make --keep-going --print-directory
+make --dry-run --keep-going --print-directory
 make: Entering directory '/root/project/OS'
-echo Building Project
-echo Target boot init build finished.
-make -C boot all
-echo -e "\t" CC -I/root/project/OS/include -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 boot.c -o boot.o
-gcc -I/root/project/OS/include -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 boot.c -o /root/project/OS/build/boot.o
-echo -e "\t" CC -I/root/project/OS/include -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 grub_head.S -o grub_head.o
-gcc -I/root/project/OS/include -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 grub_head.S -o /root/project/OS/build/grub_head.o
-echo Target boot init build finished.
-make -C init all
-echo -e "\t" CC -I/root/project/OS/include -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 main.c -o main.o
-gcc -I/root/project/OS/include -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 main.c -o /root/project/OS/build/main.o
-echo -e "\t" CC -I/root/project/OS/include -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2   -o kernel
-echo  ./build/grub_head.o ./build/boot.o   ./build/main.o
-#nasm -f elf ./boot/grub_head.S -o ./build/grub_head.o
-ld -m elf_i386 -T /root/project/OS/script/kernel.ld -Map /root/project/OS/build/kernel.map -nostdlib  ./build/grub_head.o ./build/boot.o   ./build/main.o -o build/kernel.bin
-echo Target kernel build finished.
-cp ./build/kernel.bin ./hdisk/boot/kernel.bin
-sync
+echo 编译代码文件 boot/boot.c ...
+gcc -I ./include/ -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 boot/boot.c -o boot/boot.o
+echo 编译代码文件 arch/i386/kernel/init_task.c ...
+gcc -I ./include/ -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 arch/i386/kernel/init_task.c -o arch/i386/kernel/init_task.o
+echo 编译代码文件 arch/i386/kernel/setup.c ...
+gcc -I ./include/ -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 arch/i386/kernel/setup.c -o arch/i386/kernel/setup.o
+echo 编译代码文件 kernel/panic.c ...
+gcc -I ./include/ -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 kernel/panic.c -o kernel/panic.o
+echo 编译代码文件 kernel/printk.c ...
+gcc -I ./include/ -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 kernel/printk.c -o kernel/printk.o
+echo 编译代码文件 init/main.c ...
+gcc -I ./include/ -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 init/main.c -o init/main.o
+echo 编译代码文件 lib/vsprintf.c ...
+gcc -I ./include/ -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 lib/vsprintf.c -o lib/vsprintf.o
+echo 编译代码文件 lib/string.c ...
+gcc -I ./include/ -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2 lib/string.c -o lib/string.o
+echo 链接内核文件...
+ld -T scripts/kernel.ld -m elf_i386 -nostdlib -Map ./build/kernel.map  ./boot/grub_head.o  ./boot/boot.o  ./arch/i386/kernel/init_task.o  ./arch/i386/kernel/setup.o  ./kernel/panic.o  ./kernel/printk.o  ./init/main.o  ./lib/vsprintf.o  ./lib/string.o -o kernel.bin
+cp kernel.bin ./hdisk/boot/
 sleep 1
 make: Leaving directory '/root/project/OS'
  
