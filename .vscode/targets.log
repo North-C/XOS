@@ -1,0 +1,402 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+# GNU Make 4.1
+# Built for x86_64-pc-linux-gnu
+# Copyright (C) 1988-2014 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# Make data base, printed on Sun May  8 20:08:00 2022
+
+# Variables
+
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# automatic
+?F = $(notdir $?)
+# makefile (from 'Makefile', line 6)
+DIRS := boot init
+# default
+.SHELLFLAGS := -c
+# environment
+VSCODE_AGENT_FOLDER = /root/.vscode-server
+# environment
+VSCODE_LOG_NATIVE = false
+# makefile (from 'Makefile', line 2)
+TARGET := kernel
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# makefile (from 'Makefile', line 13)
+DIST_CLEAN_FILES := 
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# automatic
+@F = $(notdir $@)
+# default
+MAKE_VERSION := 4.1
+# makefile
+CURDIR := /root/project/OS
+# makefile
+SHELL = /bin/sh
+# environment
+VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{}}
+# environment
+_ = /root/.vscode-server/bin/57fd6d0195bb9b9d1b49f6da5db789060795de47/node
+# makefile (from '/root/project/OS/config/make.global', line 1)
+MAKEFILE_LIST :=  Makefile /root/project/OS/config/make.global
+# 'override' directive
+GNUMAKEFLAGS := 
+# environment
+XDG_DATA_DIRS = /usr/local/share:/usr/share:/var/lib/snapd/desktop
+# environment
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/0/bus
+# environment
+VSCODE_VERBOSE_LOGGING = true
+# makefile (from 'Makefile', line 7)
+OBJS := 
+# environment
+LESSOPEN = | /usr/bin/lesspipe %s
+# environment
+VSCODE_CWD = /root
+# environment
+SSH_CONNECTION = 192.168.138.1 57690 192.168.138.132 22
+# environment
+PATH = /root/.vscode-server/bin/57fd6d0195bb9b9d1b49f6da5db789060795de47/bin/remote-cli:/root/anaconda3/bin:/root/anaconda3/condabin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+# makefile (from '/root/project/OS/config/make.global', line 9)
+LD := ld
+# environment
+XDG_RUNTIME_DIR = /run/user/0
+# environment
+CONDA_PREFIX = /root/anaconda3
+# environment
+VSCODE_LOG_STACK = false
+# makefile (from '/root/project/OS/config/make.global', line 10)
+LDFLAGS = -m elf_i386 -T ${PROJECT_PATH}/script/kernel.ld -Map ${PROJECT_PATH}/build/kernel.map -nostdlib
+# makefile (from '/root/project/OS/config/make.global', line 11)
+LIB = -I${PROJECT_PATH}/include
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
+# environment
+LS_COLORS = 
+# automatic
+%F = $(notdir $%)
+# environment
+CONDA_EXE = /root/anaconda3/bin/conda
+# environment
+VSCODE_PIPE_LOGGING = true
+# makefile (from 'Makefile', line 3)
+MAIN_SRC := 
+# makefile (from 'Makefile', line 58)
+SUB_MAKE_INCLUDE = $(PROJECT_PATH)/config/submake.global
+# environment
+PWD = /root/project/OS
+# environment
+VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-54a195b8-da9c-48d0-8a19-a8780b445e04.sock
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# environment
+HOME = /root
+# environment
+LESSCLOSE = /usr/bin/lesspipe %s %s
+# makefile (from 'Makefile', line 57)
+MAKE_INCLUDE = $(PROJECT_PATH)/config/make.global
+# environment
+LOGNAME = root
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
+# makefile (from '/root/project/OS/config/make.global', line 16)
+OBJCCFLAGS := -I/root/project/OS/include -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2
+# environment
+CONDA_PROMPT_MODIFIER = (base) 
+# automatic
++F = $(notdir $+)
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# makefile (from 'Makefile', line 56)
+PROJECT_PATH := /root/project/OS
+# environment
+MAKELEVEL := 0
+# environment
+CONDA_DEFAULT_ENV = base
+# default
+MAKE = $(MAKE_COMMAND)
+# default
+MAKECMDGOALS := all
+# environment
+SHLVL = 3
+# makefile (from '/root/project/OS/config/make.global', line 7)
+ASM := as
+# makefile (from '/root/project/OS/config/make.global', line 8)
+CC := gcc
+# makefile (from '/root/project/OS/config/make.global', line 4)
+BUILD_DIR = ${PROJECT_PATH}/build
+# makefile (from '/root/project/OS/config/make.global', line 17)
+ASFLAGS = --gstabs
+# environment
+XDG_SESSION_ID = 101
+# environment
+USER = root
+# makefile
+.DEFAULT_GOAL := default
+# makefile (from '/root/project/OS/config/make.global', line 14)
+CCFLAGS := -I/root/project/OS/include -c -fno-builtin -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# environment
+CONDA_SHLVL = 1
+# makefile (from 'Makefile', line 16)
+rwildcard = $(foreach d,$(wildcard $(addsuffix *,$(1))),$(call rwildcard,$(d)/,$(2))$(filter $(subst *,%,$(2)),$(d)))
+# default
+MAKE_COMMAND := make
+# default
+.VARIABLES := 
+# automatic
+*F = $(notdir $*)
+# makefile
+MAKEFLAGS = pqrRs --no-print-directory
+# environment
+MFLAGS = -pqrRs --no-print-directory
+# environment
+SSH_CLIENT = 192.168.138.1 57690 22
+# environment
+MAIL = /var/mail/root
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# environment
+BROWSER = /root/.vscode-server/bin/57fd6d0195bb9b9d1b49f6da5db789060795de47/bin/helpers/browser.sh
+# makefile (from 'Makefile', line 11)
+ALL_OBJS := 
+# environment
+VSCODE_HANDLES_SIGPIPE = true
+# default
+MAKEFILES := 
+# automatic
+<F = $(notdir $<)
+# environment
+https_proxy = http://192.168.138.1:7890
+# environment
+LC_ALL = C
+# environment
+CONDA_PYTHON_EXE = /root/anaconda3/bin/python
+# automatic
+^F = $(notdir $^)
+# default
+SUFFIXES := 
+# environment
+_CE_M = 
+# default
+.INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
+# default
+.RECIPEPREFIX := 
+# environment
+http_proxy = http://192.168.138.1:7890
+# default
+MAKE_HOST := x86_64-pc-linux-gnu
+# environment
+LANG = C
+# environment
+VSCODE_EXTHOST_WILL_SEND_SOCKET = true
+# makefile (from 'Makefile', line 55)
+mkfile_path := /root/project/OS/Makefile
+# environment
+_CE_CONDA = 
+# variable set hash-table stats:
+# Load=97/1024=9%, Rehash=0, Collisions=13/148=9%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 2049, inode 1442764): 19 files, no impossibilities.
+
+# 19 files, no impossibilities in 1 directories.
+
+# Implicit Rules
+
+%.o: %.c
+#  recipe to execute (from '/root/project/OS/config/make.global', line 30):
+	@echo -e "\t" CC $(CCFLAGS) $< -o $@
+	@$(CC) $(CCFLAGS) $< -o ${BUILD_DIR}/$@
+
+%.o: %.S
+#  recipe to execute (from '/root/project/OS/config/make.global', line 34):
+	@echo -e "\t" CC $(CCFLAGS) $< -o $@
+	@$(CC) $(CCFLAGS) $< -o ${BUILD_DIR}/$@
+
+# 2 implicit rules, 0 (0.0%) terminal.
+
+# Files
+
+# Not a target:
+/root/project/OS/config/make.global:
+#  Implicit rule search has been done.
+#  Last modified 2022-05-08 02:57:49.792052768
+#  File has been updated.
+#  Successfully updated.
+
+all: kernel find-all-objs build/kernel.bin
+#  Phony target (prerequisite of .PHONY).
+#  Command line target.
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/6=0%
+#  recipe to execute (from 'Makefile', line 33):
+	@echo Target $(TARGET) build finished.
+	cp ./build/kernel.bin ./hdisk/boot/kernel.bin
+	sync
+	sleep 1
+
+show-info:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 50):
+	@echo Building Project
+
+.PHONY: debug find-all-objs all clean show-info build-subdirs boot init
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 53):
+	
+
+find-all-objs:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 28):
+	$(eval ALL_OBJS += $(call rwildcard,./build,*.o))
+
+ 
+# Not a target:
+.SUFFIXES:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+Makefile:
+#  Implicit rule search has been done.
+#  Last modified 2022-05-08 04:43:08.325412416
+#  File has been updated.
+#  Successfully updated.
+
+kernel: build-subdirs
+#  Implicit rule search has not been done.
+#  Last modified 2022-04-28 02:03:27.752682564
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/6=0%
+#  recipe to execute (from 'Makefile', line 23):
+	@echo -e "\t" CC $(CCFLAGS) $(ALL_OBJS) $(MAIN_SRC) -o $@
+
+debug:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+
+default: show-info all
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+build-subdirs: boot init
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/6=0%
+
+clean:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 45):
+	cd ./build && rm -f ./*
+
+build/kernel.bin:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 39):
+	@echo ${ALL_OBJS}
+	#nasm -f elf ./boot/grub_head.S -o ./build/grub_head.o
+	${LD} ${LDFLAGS} $(ALL_OBJS) -o $@
+
+init:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from '/root/project/OS/config/make.global', line 25):
+	@echo Target $(DIRS) build finished.
+	@$(MAKE) -C $@ all
+
+boot:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  Implicit/static pattern stem: ''
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# automatic
+# @ := boot
+# automatic
+# % := 
+# automatic
+# * := 
+# automatic
+# + := 
+# automatic
+# | := 
+# automatic
+# < := 
+# automatic
+# ^ := 
+# automatic
+# ? := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/15=13%
+#  recipe to execute (from '/root/project/OS/config/make.global', line 25):
+	@echo Target $(DIRS) build finished.
+	@$(MAKE) -C $@ all
+
+# files hash-table stats:
+# Load=16/1024=2%, Rehash=0, Collisions=0/58=0%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 1 (0) / strings = 36 / storage = 313 B / avg = 8 B
+# current buf: size = 8162 B / used = 313 B / count = 36 / avg = 8 B
+
+# strcache performance: lookups = 85 / hit rate = 57%
+# hash-table stats:
+# Load=36/8192=0%, Rehash=0, Collisions=3/85=4%
+# Finished Make data base on Sun May  8 20:08:00 2022
+
+ 

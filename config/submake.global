@@ -1,0 +1,4 @@
+.PHONY: all
+all: $(OBJS) build-subdirs
+
+include $(MAKE_INCLUDE)

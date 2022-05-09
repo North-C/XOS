@@ -1,0 +1,11 @@
+{
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.errorSquiggles": "Disabled",
+    "files.associations": {
+        "*.txt": "cmake",
+        "gdt.h": "c",
+        "multiboot.h": "c",
+        "types.h": "c",
+        "init.h": "c"
+    }
+}
