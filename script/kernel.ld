@@ -6,8 +6,6 @@
  *      Linux GCC 增加了额外的数据段 .rodata，这是一个只读的已初始化数据段，放置常量什么的。
  *      简单起见，我们把和 .data 段放在一起好了。
 */
-OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
-OUTPUT_ARCH(i386)
 ENTRY(start)       /* 入口地址 */
 SECTIONS
 {
@@ -30,7 +28,7 @@ SECTIONS
         *(.text)
         . = ALIGN(4096);
     }
-    .data : AT(ADDR(.data) - 0xC0000000)
+    .data : AT(ADDR(.text) - 0xC0000000)
     {
         *(.data)
         *(.rodata)

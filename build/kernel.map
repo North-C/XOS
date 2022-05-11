@@ -37,61 +37,61 @@ Linker script and memory map
                 0x0000000000101000                . = ALIGN (0x1000)
  *fill*         0x000000000010033d      0xcc3 
 
-.data.init      0x0000000000101000     0xc000
- *(.datat.init)
-                0x0000000000102000                . = ALIGN (0x2000)
- *fill*         0x0000000000101000     0x1000 
- .data.init     0x0000000000102000     0x8004 ./boot/grub_head.o
-                0x000000000010a000                global_multiboot_info
- *fill*         0x000000000010a004      0xffc 
- .data.init     0x000000000010b000     0x2000 ./boot/boot.o
-                0x000000000010b000                pgd
-                0x000000000010c000                pte
-                0x00000000c010d000                . = (. + 0xc0000000)
+.data.init      0x0000000000101000     0xb000
+ *(.data.init)
+ .data.init     0x0000000000101000     0x8004 ./boot/grub_head.o
+                0x0000000000109000                global_multiboot_info
+ *fill*         0x0000000000109004      0xffc 
+ .data.init     0x000000000010a000     0x2000 ./boot/boot.o
+                0x000000000010a000                pgd
+                0x000000000010b000                pte
+                0x000000000010c000                . = ALIGN (0x2000)
+                0x00000000c010c000                . = (. + 0xc0000000)
 
-.text           0x00000000c010d000     0x1000 load address 0x000000000010d000
+.text           0x00000000c010c000     0x1000 load address 0x000000000010c000
  *(.text)
- .text          0x00000000c010d000        0x0 ./boot/boot.o
- .text          0x00000000c010d000        0x0 ./arch/i386/kernel/init_task.o
- .text          0x00000000c010d000        0x0 ./arch/i386/kernel/setup.o
- .text          0x00000000c010d000        0x0 ./kernel/panic.o
- .text          0x00000000c010d000        0x0 ./kernel/printk.o
- .text          0x00000000c010d000      0x172 ./init/main.o
-                0x00000000c010d000                start_kernel
- .text          0x00000000c010d172        0x0 ./lib/vsprintf.o
- .text          0x00000000c010d172        0x0 ./lib/string.o
-                0x00000000c010e000                . = ALIGN (0x1000)
- *fill*         0x00000000c010d172      0xe8e 
+ .text          0x00000000c010c000        0x0 ./boot/boot.o
+ .text          0x00000000c010c000        0x0 ./arch/i386/kernel/init_task.o
+ .text          0x00000000c010c000        0x0 ./arch/i386/kernel/setup.o
+ .text          0x00000000c010c000        0x0 ./kernel/panic.o
+ .text          0x00000000c010c000        0x0 ./kernel/printk.o
+ .text          0x00000000c010c000      0x172 ./init/main.o
+                0x00000000c010c000                start_kernel
+ .text          0x00000000c010c172        0x0 ./lib/vsprintf.o
+ .text          0x00000000c010c172        0x0 ./lib/string.o
+                0x00000000c010d000                . = ALIGN (0x1000)
+ *fill*         0x00000000c010c172      0xe8e 
 
-.iplt           0x00000000c010e000        0x0 load address 0x000000000010e000
- .iplt          0x00000000c010e000        0x0 ./boot/grub_head.o
+.iplt           0x00000000c010d000        0x0 load address 0x000000000010d000
+ .iplt          0x00000000c010d000        0x0 ./boot/grub_head.o
 
-.rel.dyn        0x00000000c010e000        0x0 load address 0x000000000010e000
- .rel.got       0x00000000c010e000        0x0 ./boot/grub_head.o
- .rel.iplt      0x00000000c010e000        0x0 ./boot/grub_head.o
+.rel.dyn        0x00000000c010d000        0x0 load address 0x000000000010d000
+ .rel.got       0x00000000c010d000        0x0 ./boot/grub_head.o
+ .rel.iplt      0x00000000c010d000        0x0 ./boot/grub_head.o
  .rel.text.init
-                0x00000000c010e000        0x0 ./boot/grub_head.o
+                0x00000000c010d000        0x0 ./boot/grub_head.o
 
-.data           0x00000000c010e000        0x0 load address 0x000000000010d000
+.data           0x00000000c010d000     0x1000 load address 0x000000000010d000
  *(.data)
- .data          0x00000000c010e000        0x0 ./boot/boot.o
- .data          0x00000000c010e000        0x0 ./arch/i386/kernel/init_task.o
- .data          0x00000000c010e000        0x0 ./arch/i386/kernel/setup.o
- .data          0x00000000c010e000        0x0 ./kernel/panic.o
- .data          0x00000000c010e000        0x0 ./kernel/printk.o
- .data          0x00000000c010e000        0x0 ./init/main.o
- .data          0x00000000c010e000        0x0 ./lib/vsprintf.o
- .data          0x00000000c010e000        0x0 ./lib/string.o
+ .data          0x00000000c010d000        0x0 ./boot/boot.o
+ .data          0x00000000c010d000        0x0 ./arch/i386/kernel/init_task.o
+ .data          0x00000000c010d000        0x0 ./arch/i386/kernel/setup.o
+ .data          0x00000000c010d000        0x0 ./kernel/panic.o
+ .data          0x00000000c010d000        0x0 ./kernel/printk.o
+ .data          0x00000000c010d000        0x0 ./init/main.o
+ .data          0x00000000c010d000        0x0 ./lib/vsprintf.o
+ .data          0x00000000c010d000        0x0 ./lib/string.o
  *(.rodata)
                 0x00000000c010e000                . = ALIGN (0x2000)
+ *fill*         0x00000000c010d000     0x1000 
 
-.got            0x00000000c010e000        0x0 load address 0x000000000010d000
+.got            0x00000000c010e000        0x0 load address 0x000000000010e000
  .got           0x00000000c010e000        0x0 ./boot/grub_head.o
 
-.got.plt        0x00000000c010e000        0x0 load address 0x000000000010d000
+.got.plt        0x00000000c010e000        0x0 load address 0x000000000010e000
  .got.plt       0x00000000c010e000        0x0 ./boot/grub_head.o
 
-.igot.plt       0x00000000c010e000        0x0 load address 0x000000000010d000
+.igot.plt       0x00000000c010e000        0x0 load address 0x000000000010e000
  .igot.plt      0x00000000c010e000        0x0 ./boot/grub_head.o
 
 .bss            0x00000000c010e000        0x4 load address 0x000000000010e000
@@ -145,7 +145,7 @@ LOAD ./kernel/printk.o
 LOAD ./init/main.o
 LOAD ./lib/vsprintf.o
 LOAD ./lib/string.o
-OUTPUT(kernel.bin elf32-i386)
+OUTPUT(/root/project/OS/build/kernel.bin elf32-i386)
 
 .debug_info     0x0000000000000000      0x4df
  .debug_info    0x0000000000000000      0x439 ./boot/boot.o
