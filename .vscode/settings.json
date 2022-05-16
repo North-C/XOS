@@ -6,6 +6,13 @@
         "gdt.h": "c",
         "multiboot.h": "c",
         "types.h": "c",
-        "init.h": "c"
+        "init.h": "c",
+        "stdio.h": "c",
+        "linkage.h": "c",
+        "ctype.h": "c",
+        "div64.h": "c",
+        "string.h": "c",
+        "console.h": "c",
+        "posix_types.h": "c"
     }
 }

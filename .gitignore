@@ -4,6 +4,7 @@
 *.txt
 ./hdisk/*
 *.map
+.vscode
 # Prerequisites
 *.d
 
