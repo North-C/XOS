@@ -1,14 +1,25 @@
 #!Makefile
-mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-PROJECT_PATH := $(patsubst %/,%,$(dir $(mkfile_path)))
-BUILD_DIR = ${PROJECT_PATH}/build
-C_OBJECTS = $(addprefix ${BUILD_DIR}/, $(notdir $(patsubst %.c, %.o, $(C_SOURCES)))) # 暂时没有修改完成
+# 文件目录设置
+BUILD_DIR = build# 生成的.o文件目录
+SOURCE_DIR = boot init arch/i386/kernel kernel lib   # 源文件目录 
+ASSEMBLY_DIR = boot 				# 汇编文件目录
 
-C_SOURCES = $(shell find . -name "*.c")
-C_OBJECTS = $(patsubst %.c, %.o, $(C_SOURCES))
-S_SOURCES = $(shell find . -name "*.s")
-S_OBJECTS = $(patsubst %.s, %.o, $(S_SOURCES))
+vpath %.c $(SOURCE_DIR)       # 寻找.c文件依赖时，自动到 $(SOURCE_DIR)下寻找
+# 递归查找，暂时失败
+# rwildcard=$(foreach d,$(wildcard $(addsuffix *,$(1))),$(call rwildcard,$(d)/,$(2))$(filter $(subst *,%,$(2)),$(d)))
 
+# .c 源文件和目标文件,递归查找
+C_SOURCES = $(foreach dir, $(SOURCE_DIR), $(wildcard $(dir)/*.c))
+#C_SOURCES = $(shell find . -name "*.c")
+C_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.o, $(notdir $(C_SOURCES))))
+
+# .s 源文件和目标文件
+S_SOURCES = $(foreach dir, $(ASSEMBLY_DIR), $(wildcard $(dir)/*.s))
+#S_SOURCES = $(shell find . -name "*.s")
+S_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.s, %.o, $(notdir $(S_SOURCES))))
+
+
+# 编译
 CC = gcc
 LD = ld
 ASM = nasm
@@ -19,13 +30,15 @@ ASM_FLAGS = -f elf -g -F stabs
 
 all: $(S_OBJECTS) $(C_OBJECTS) link update_image
 
-%.o: %.c
+# 编译 .c 文件 
+$(BUILD_DIR)/%.o: %.c
 	@echo 编译代码文件 $< ...
 	$(CC) $(C_FLAGS) $< -o $@
-	
-%.o: %.s
+
+# 编译 .s文件
+$(BUILD_DIR)/%.o: $(ASSEMBLY_DIR)/%.s
 	@echo 编译汇编文件 $< ...
-	$(ASM) $(ASM_FLAGS) $<
+	$(ASM) $(ASM_FLAGS) $< -o $@		
 
 link:
 	@echo 链接内核文件...
