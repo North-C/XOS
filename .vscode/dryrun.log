@@ -1,26 +1,7 @@
 make --dry-run --keep-going --print-directory
 make: Entering directory '/root/project/OS'
 echo 链接内核文件...
-ld -T scripts/kernel.ld -m elf_i386 -nostdlib -Map build			/kernel.map build			/grub_head.o build			/boot.o build			/main.o build			/panic.o build			/printk.o build			/console.o build			/ctype.o build			/string.o build			/vsprintf.o -o build			/kernel.bin
+ld -T scripts/kernel.ld -m elf_i386 -nostdlib -Map build/kernel.map build/grub_head.o build/boot.o build/main.o build/setup.o build/init_task.o build/panic.o build/printk.o build/console.o build/ctype.o build/string.o build/debug.o build/vsprintf.o build/numa.o build/bootmem.o build/page_alloc.o build/memory.o -o build/kernel.bin
 cp ./build/kernel.bin ./hdisk/boot/
-sleep 1
 make: Leaving directory '/root/project/OS'
  
-Makefile:35: *** mixed implicit and normal rules: deprecated syntax
-Makefile:41: warning: overriding recipe for target 'build'
-Makefile:36: warning: ignoring old recipe for target 'build'
-Makefile:40: *** mixed implicit and normal rules: deprecated syntax
-Makefile:41: warning: overriding recipe for target '/%.o'
-Makefile:36: warning: ignoring old recipe for target '/%.o'
-make: *** No rule to make target '/%.s', needed by 'build'.
-make: *** No rule to make target '%.c', needed by 'build'.
-make: *** No rule to make target '/grub_head.o', needed by 'all'.
-make: *** No rule to make target '/boot.o', needed by 'all'.
-make: *** No rule to make target '/main.o', needed by 'all'.
-make: *** No rule to make target '/panic.o', needed by 'all'.
-make: *** No rule to make target '/printk.o', needed by 'all'.
-make: *** No rule to make target '/console.o', needed by 'all'.
-make: *** No rule to make target '/ctype.o', needed by 'all'.
-make: *** No rule to make target '/string.o', needed by 'all'.
-make: *** No rule to make target '/vsprintf.o', needed by 'all'.
-

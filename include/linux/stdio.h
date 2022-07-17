@@ -22,6 +22,4 @@ int vsprintf(char *str, const char* format, va_list ap);
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list args);
 int printk(const char *fmt, ...);
 
-void panic(const char *fmt, ...);
-
 #endif

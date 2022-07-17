@@ -4,6 +4,8 @@
 #define _ASM_IO_H
 
 #include <linux/types.h>
+#include <asm-i386/io.h>
+#include <asm-i386/page.h>
 
 /* 向端口port中写入一个字节data */
 static inline void outb(uint16_t port, uint8_t data)
@@ -43,6 +45,28 @@ static inline uint16_t inw(uint16_t port)
 static inline void insw(uint16_t port, void *addr, uint32_t count)
 {
     asm volatile("cld; rep insw": "+D"(addr), "+c"(count) : "d" (port) : "memory");
+}
+
+/**
+ * @brief 将物理地址映射为虚拟地址，只用于有内核映射的地址
+ * 
+ * @param address 映射地址
+ * @return void* 返回虚拟地址，是当前CPU对给定内存地址的映射
+ */
+static inline void * phys_to_virt(unsigned long address)
+{
+    return __va(address);
+}
+
+/**
+ * @brief 将虚拟地址映射到物理地址
+ * 
+ * @param address 虚拟地址
+ * @return unsigned long 物理地址
+ */
+static inline unsigned long virt_to_phys(volatile void * address)
+{
+    return __pa(address);
 }
 
 

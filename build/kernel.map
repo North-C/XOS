@@ -2,7 +2,14 @@
 Allocating common symbols
 Common symbol       size              file
 
+bios_tmp            0x284             build/setup.o
+max_pfn             0x4               build/bootmem.o
+max_low_pfn         0x4               build/bootmem.o
+pgdat_list          0x4               build/page_alloc.o
+min_low_pfn         0x4               build/bootmem.o
+e820                0x284             build/setup.o
 kern_stack_top      0x4               build/boot.o
+mem_map             0x4               build/memory.o
 
 Discarded input sections
 
@@ -11,9 +18,9 @@ Discarded input sections
  .comment       0x0000000000000000       0x2a build/main.o
  .eh_frame      0x0000000000000000       0x34 build/main.o
  .comment       0x0000000000000000       0x2a build/setup.o
+ .eh_frame      0x0000000000000000      0x1c8 build/setup.o
  .comment       0x0000000000000000       0x2a build/init_task.o
  .comment       0x0000000000000000       0x2a build/panic.o
- .eh_frame      0x0000000000000000       0x34 build/panic.o
  .comment       0x0000000000000000       0x2a build/printk.o
  .eh_frame      0x0000000000000000       0x38 build/printk.o
  .comment       0x0000000000000000       0x2a build/console.o
@@ -21,8 +28,16 @@ Discarded input sections
  .comment       0x0000000000000000       0x2a build/ctype.o
  .comment       0x0000000000000000       0x2a build/string.o
  .eh_frame      0x0000000000000000      0x198 build/string.o
+ .comment       0x0000000000000000       0x2a build/debug.o
+ .eh_frame      0x0000000000000000       0x34 build/debug.o
  .comment       0x0000000000000000       0x2a build/vsprintf.o
  .eh_frame      0x0000000000000000      0x16c build/vsprintf.o
+ .comment       0x0000000000000000       0x2a build/numa.o
+ .comment       0x0000000000000000       0x2a build/bootmem.o
+ .eh_frame      0x0000000000000000      0x130 build/bootmem.o
+ .comment       0x0000000000000000       0x2a build/page_alloc.o
+ .eh_frame      0x0000000000000000       0x38 build/page_alloc.o
+ .comment       0x0000000000000000       0x2a build/memory.o
 
 Memory Configuration
 
@@ -32,161 +47,206 @@ Name             Origin             Length             Attributes
 Linker script and memory map
 
                 0x0000000000100000                . = 0x100000
-                [!provide]                        PROVIDE (_start = .)
+                0x0000000000100000                PROVIDE (_start = .)
 
-.text.init      0x0000000000100000     0x1000
+.text.init      0x0000000000100000     0x2000
  *(.text.init)
  .text.init     0x0000000000100000       0x2d build/grub_head.o
                 0x000000000010000c                start
                 0x0000000000100025                flush
  .text.init     0x000000000010002d      0x310 build/boot.o
                 0x0000000000100308                kern_entry
-                0x0000000000101000                . = ALIGN (0x1000)
- *fill*         0x000000000010033d      0xcc3 
+ .text.init     0x000000000010033d      0xe07 build/setup.o
+                0x0000000000101061                setup_arch
+ .text.init     0x0000000000101144      0x237 build/bootmem.o
+                0x0000000000101144                init_bootmem
+                0x0000000000101171                free_bootmem
+                0x0000000000101190                reserve_bootmem
+                0x00000000001011b0                __alloc_bootmem
+ .text.init     0x000000000010137b        0x6 build/page_alloc.o
+                0x000000000010137b                free_area_init
+                0x0000000000102000                . = ALIGN (0x1000)
+ *fill*         0x0000000000101381      0xc7f 
 
-.data.init      0x0000000000101000     0xb000
+.data.init      0x0000000000102000     0xc000
  *(.data.init)
- .data.init     0x0000000000101000     0x8004 build/grub_head.o
-                0x0000000000109000                global_multiboot_info
- *fill*         0x0000000000109004      0xffc 
- .data.init     0x000000000010a000     0x2000 build/boot.o
-                0x000000000010a000                pgd
-                0x000000000010b000                pte
-                0x000000000010c000                . = ALIGN (0x2000)
-                0x00000000c010c000                . = (. + 0xc0000000)
+ .data.init     0x0000000000102000     0x8004 build/grub_head.o
+                0x000000000010a000                global_multiboot_info
+ *fill*         0x000000000010a004      0xffc 
+ .data.init     0x000000000010b000     0x2000 build/boot.o
+                0x000000000010b000                pgd
+                0x000000000010c000                pte
+ .data.init     0x000000000010d000        0x4 build/setup.o
+                0x000000000010e000                . = ALIGN (0x2000)
+ *fill*         0x000000000010d004      0xffc 
+                0x00000000c010e000                . = (. + 0xc0000000)
 
-.text           0x00000000c010c000     0x2000 load address 0x000000000010c000
+.text           0x00000000c010e000     0x2000 load address 0x000000000010e000
  *(.text)
- .text          0x00000000c010c000        0x0 build/boot.o
- .text          0x00000000c010c000       0x78 build/main.o
-                0x00000000c010c000                start_kernel
- .text          0x00000000c010c078        0x0 build/setup.o
- .text          0x00000000c010c078        0x0 build/init_task.o
- .text          0x00000000c010c078       0x62 build/panic.o
-                0x00000000c010c078                panic
- .text          0x00000000c010c0da       0x44 build/printk.o
-                0x00000000c010c0da                printk
- .text          0x00000000c010c11e      0x442 build/console.o
-                0x00000000c010c13d                print_char
-                0x00000000c010c24c                print_str
-                0x00000000c010c27a                print_int
-                0x00000000c010c2b9                print_hex
-                0x00000000c010c308                set_cursor
-                0x00000000c010c384                flush_screen
-                0x00000000c010c3b2                scroll_screen
-                0x00000000c010c4ec                console_clear
-                0x00000000c010c54e                console_write
-                0x00000000c010c554                console_write_with_color
-                0x00000000c010c55a                console_with_hex
- .text          0x00000000c010c560        0x0 build/ctype.o
- .text          0x00000000c010c560      0x3ae build/string.o
-                0x00000000c010c560                itoa
-                0x00000000c010c617                uitoa
-                0x00000000c010c6d3                strlen
-                0x00000000c010c6fb                strnlen
-                0x00000000c010c730                strcpy
-                0x00000000c010c760                strcat
-                0x00000000c010c7a0                strcmp
-                0x00000000c010c7df                strchr
-                0x00000000c010c80c                strrchr
-                0x00000000c010c84c                memset
-                0x00000000c010c87a                memcpy
-                0x00000000c010c8b7                memcmp
- .text          0x00000000c010c90e      0xb0e build/vsprintf.o
-                0x00000000c010cc93                simple_strtol
-                0x00000000c010ccd5                simple_strtoul
-                0x00000000c010cdc5                printf
-                0x00000000c010ce13                sprintf
-                0x00000000c010ce43                snprintf
-                0x00000000c010ce73                vsprintf
-                0x00000000c010ce8e                vsnprintf
-                0x00000000c010e000                . = ALIGN (0x1000)
- *fill*         0x00000000c010d41c      0xbe4 
+ .text          0x00000000c010e000        0x0 build/boot.o
+ .text          0x00000000c010e000       0x1d build/main.o
+                0x00000000c010e000                start_kernel
+ .text          0x00000000c010e01d       0x9e build/setup.o
+                0x00000000c010e01d                show_memory_map
+ .text          0x00000000c010e0bb        0x0 build/init_task.o
+ .text          0x00000000c010e0bb        0x0 build/panic.o
+ .text          0x00000000c010e0bb       0x44 build/printk.o
+                0x00000000c010e0bb                printk
+ .text          0x00000000c010e0ff      0x442 build/console.o
+                0x00000000c010e11e                print_char
+                0x00000000c010e22d                print_str
+                0x00000000c010e25b                print_int
+                0x00000000c010e29a                print_hex
+                0x00000000c010e2e9                set_cursor
+                0x00000000c010e365                flush_screen
+                0x00000000c010e393                scroll_screen
+                0x00000000c010e4cd                console_clear
+                0x00000000c010e52f                console_write
+                0x00000000c010e535                console_write_with_color
+                0x00000000c010e53b                console_with_hex
+ .text          0x00000000c010e541        0x0 build/ctype.o
+ .text          0x00000000c010e541      0x3ae build/string.o
+                0x00000000c010e541                itoa
+                0x00000000c010e5f8                uitoa
+                0x00000000c010e6b4                strlen
+                0x00000000c010e6dc                strnlen
+                0x00000000c010e711                strcpy
+                0x00000000c010e741                strcat
+                0x00000000c010e781                strcmp
+                0x00000000c010e7c0                strchr
+                0x00000000c010e7ed                strrchr
+                0x00000000c010e82d                memset
+                0x00000000c010e85b                memcpy
+                0x00000000c010e898                memcmp
+ .text          0x00000000c010e8ef       0x62 build/debug.o
+                0x00000000c010e8ef                panic
+ .text          0x00000000c010e951      0xb0e build/vsprintf.o
+                0x00000000c010ecd6                simple_strtol
+                0x00000000c010ed18                simple_strtoul
+                0x00000000c010ee08                printf
+                0x00000000c010ee56                sprintf
+                0x00000000c010ee86                snprintf
+                0x00000000c010eeb6                vsprintf
+                0x00000000c010eed1                vsnprintf
+ .text          0x00000000c010f45f        0x0 build/numa.o
+ .text          0x00000000c010f45f        0xd build/bootmem.o
+ .text          0x00000000c010f46c        0x0 build/page_alloc.o
+ .text          0x00000000c010f46c        0x0 build/memory.o
+                0x00000000c0110000                . = ALIGN (0x1000)
+ *fill*         0x00000000c010f46c      0xb94 
 
-.iplt           0x00000000c010e000        0x0 load address 0x000000000010e000
- .iplt          0x00000000c010e000        0x0 build/grub_head.o
+.iplt           0x00000000c0110000        0x0 load address 0x0000000000110000
+ .iplt          0x00000000c0110000        0x0 build/grub_head.o
 
-.rel.dyn        0x00000000c010e000        0x0 load address 0x000000000010e000
- .rel.got       0x00000000c010e000        0x0 build/grub_head.o
- .rel.iplt      0x00000000c010e000        0x0 build/grub_head.o
+.rel.dyn        0x00000000c0110000        0x0 load address 0x0000000000110000
+ .rel.got       0x00000000c0110000        0x0 build/grub_head.o
+ .rel.iplt      0x00000000c0110000        0x0 build/grub_head.o
  .rel.text.init
-                0x00000000c010e000        0x0 build/grub_head.o
+                0x00000000c0110000        0x0 build/grub_head.o
 
-.data           0x00000000c010e000     0x2000 load address 0x000000000010e000
+.data           0x00000000c0110000     0x2000 load address 0x0000000000110000
  *(.data)
- .data          0x00000000c010e000        0x0 build/boot.o
- .data          0x00000000c010e000        0x0 build/main.o
- .data          0x00000000c010e000        0x0 build/setup.o
- .data          0x00000000c010e000        0x0 build/init_task.o
- .data          0x00000000c010e000        0x0 build/panic.o
- .data          0x00000000c010e000        0x4 build/printk.o
- .data          0x00000000c010e004        0x4 build/console.o
- *fill*         0x00000000c010e008       0x18 
- .data          0x00000000c010e020      0x100 build/ctype.o
-                0x00000000c010e020                _ctype
- .data          0x00000000c010e120        0x0 build/string.o
- .data          0x00000000c010e120        0x0 build/vsprintf.o
+ .data          0x00000000c0110000        0x0 build/boot.o
+ .data          0x00000000c0110000        0x0 build/main.o
+ .data          0x00000000c0110000        0x0 build/setup.o
+ .data          0x00000000c0110000        0x0 build/init_task.o
+ .data          0x00000000c0110000        0x0 build/panic.o
+ .data          0x00000000c0110000        0x4 build/printk.o
+ .data          0x00000000c0110004        0x4 build/console.o
+ *fill*         0x00000000c0110008       0x18 
+ .data          0x00000000c0110020      0x100 build/ctype.o
+                0x00000000c0110020                _ctype
+ .data          0x00000000c0110120        0x0 build/string.o
+ .data          0x00000000c0110120        0x0 build/debug.o
+ .data          0x00000000c0110120        0x0 build/vsprintf.o
+ .data          0x00000000c0110120      0x1c0 build/numa.o
+                0x00000000c0110120                contig_page_data
+ .data          0x00000000c01102e0        0x0 build/bootmem.o
+ .data          0x00000000c01102e0        0x0 build/page_alloc.o
+ .data          0x00000000c01102e0        0x0 build/memory.o
  *(.rodata)
- .rodata        0x00000000c010e120       0x1b build/main.o
- .rodata        0x00000000c010e13b       0x37 build/panic.o
- .rodata        0x00000000c010e172        0x3 build/console.o
- *fill*         0x00000000c010e175        0xb 
- .rodata        0x00000000c010e180      0x205 build/vsprintf.o
-                0x00000000c0110000                . = ALIGN (0x2000)
- *fill*         0x00000000c010e385     0x1c7b 
-
-.got            0x00000000c0110000        0x0 load address 0x0000000000110000
- .got           0x00000000c0110000        0x0 build/grub_head.o
-
-.got.plt        0x00000000c0110000        0x0 load address 0x0000000000110000
- .got.plt       0x00000000c0110000        0x0 build/grub_head.o
-
-.igot.plt       0x00000000c0110000        0x0 load address 0x0000000000110000
- .igot.plt      0x00000000c0110000        0x0 build/grub_head.o
-
-.bss            0x00000000c0110000     0x1004 load address 0x0000000000110000
- *(.bss)
- .bss           0x00000000c0110000        0x0 build/boot.o
- .bss           0x00000000c0110000        0x0 build/main.o
- .bss           0x00000000c0110000        0x0 build/setup.o
- .bss           0x00000000c0110000        0x0 build/init_task.o
- .bss           0x00000000c0110000      0x400 build/panic.o
- .bss           0x00000000c0110400      0x400 build/printk.o
- .bss           0x00000000c0110800        0x4 build/console.o
-                0x00000000c0110800                cursor_x
-                0x00000000c0110802                cursor_y
- .bss           0x00000000c0110804        0x0 build/ctype.o
- .bss           0x00000000c0110804        0x0 build/string.o
- .bss           0x00000000c0110804        0x0 build/vsprintf.o
-                0x00000000c0111000                . = ALIGN (0x1000)
- *fill*         0x00000000c0110804      0x7fc 
- COMMON         0x00000000c0111000        0x4 build/boot.o
-                0x00000000c0111000                kern_stack_top
-
-.stab           0x00000000c0111004      0xffc load address 0x0000000000111004
- *(.stab)
- .stab          0x00000000c0111004        0xc build/grub_head.o
+ .rodata        0x00000000c01102e0        0xe build/main.o
+ *fill*         0x00000000c01102ee        0x2 
+ .rodata        0x00000000c01102f0      0x1de build/setup.o
+ .rodata        0x00000000c01104ce        0x3 build/console.o
+ .rodata        0x00000000c01104d1       0x34 build/debug.o
+ *fill*         0x00000000c0110505       0x1b 
+ .rodata        0x00000000c0110520      0x205 build/vsprintf.o
+ *fill*         0x00000000c0110725        0x3 
+ .rodata        0x00000000c0110728       0x58 build/bootmem.o
                 0x00000000c0112000                . = ALIGN (0x2000)
- *fill*         0x00000000c0111010      0xff0 
+ *fill*         0x00000000c0110780     0x1880 
+
+.got            0x00000000c0112000        0x0 load address 0x0000000000112000
+ .got           0x00000000c0112000        0x0 build/grub_head.o
+
+.got.plt        0x00000000c0112000        0x0 load address 0x0000000000112000
+ .got.plt       0x00000000c0112000        0x0 build/grub_head.o
+
+.igot.plt       0x00000000c0112000        0x0 load address 0x0000000000112000
+ .igot.plt      0x00000000c0112000        0x0 build/grub_head.o
+
+.bss            0x00000000c0112000     0x1558 load address 0x0000000000112000
+ *(.bss)
+ .bss           0x00000000c0112000        0x0 build/boot.o
+ .bss           0x00000000c0112000        0x0 build/main.o
+ .bss           0x00000000c0112000        0x0 build/setup.o
+ .bss           0x00000000c0112000        0x0 build/init_task.o
+ .bss           0x00000000c0112000        0x0 build/panic.o
+ .bss           0x00000000c0112000      0x400 build/printk.o
+ .bss           0x00000000c0112400        0x4 build/console.o
+                0x00000000c0112400                cursor_x
+                0x00000000c0112402                cursor_y
+ .bss           0x00000000c0112404        0x0 build/ctype.o
+ .bss           0x00000000c0112404        0x0 build/string.o
+ *fill*         0x00000000c0112404       0x1c 
+ .bss           0x00000000c0112420      0x400 build/debug.o
+ .bss           0x00000000c0112820        0x0 build/vsprintf.o
+ .bss           0x00000000c0112820       0x14 build/numa.o
+ .bss           0x00000000c0112834        0x0 build/bootmem.o
+ .bss           0x00000000c0112834        0x0 build/page_alloc.o
+ .bss           0x00000000c0112834        0x0 build/memory.o
+                0x00000000c0113000                . = ALIGN (0x1000)
+ *fill*         0x00000000c0112834      0x7cc 
+ COMMON         0x00000000c0113000        0x4 build/boot.o
+                0x00000000c0113000                kern_stack_top
+ *fill*         0x00000000c0113004       0x1c 
+ COMMON         0x00000000c0113020      0x524 build/setup.o
+                0x00000000c0113020                bios_tmp
+                0x00000000c01132c0                e820
+ COMMON         0x00000000c0113544        0xc build/bootmem.o
+                0x00000000c0113544                max_pfn
+                0x00000000c0113548                max_low_pfn
+                0x00000000c011354c                min_low_pfn
+ COMMON         0x00000000c0113550        0x4 build/page_alloc.o
+                0x00000000c0113550                pgdat_list
+ COMMON         0x00000000c0113554        0x4 build/memory.o
+                0x00000000c0113554                mem_map
+
+.stab           0x00000000c0113558      0xaa8 load address 0x0000000000113558
+ *(.stab)
+ .stab          0x00000000c0113558        0xc build/grub_head.o
+                0x00000000c0114000                . = ALIGN (0x2000)
+ *fill*         0x00000000c0113564      0xa9c 
 
 .data.init_task
-                0x00000000c0112000        0x0 load address 0x0000000000112000
+                0x00000000c0114000        0x0 load address 0x0000000000114000
  *(.data.init_task)
-                0x00000000c0112000                . = ALIGN (0x2000)
+                0x00000000c0114000                . = ALIGN (0x2000)
                 [!provide]                        PROVIDE (__initcall_start = .)
 
-.initcall.init  0x00000000c0112000        0x0 load address 0x0000000000112000
+.initcall.init  0x00000000c0114000        0x0 load address 0x0000000000114000
  *(.initcall.init)
                 [!provide]                        PROVIDE (__initcall_end = .)
-                0x00000000c0112000                . = ALIGN (0x2000)
-                0x00000000c0114000                . = (. + 0x2000)
+                0x00000000c0114000                . = ALIGN (0x2000)
+                0x00000000c0116000                . = (. + 0x2000)
 
-.stabstr        0x00000000c0114000     0x1000 load address 0x0000000000114000
+.stabstr        0x00000000c0116000     0x1000 load address 0x0000000000116000
  *(.stabstr)
- .stabstr       0x00000000c0114000        0x1 build/grub_head.o
-                0x00000000c0115000                . = ALIGN (0x1000)
- *fill*         0x00000000c0114001      0xfff 
-                [!provide]                        PROVIDE (_end = .)
+ .stabstr       0x00000000c0116000        0x1 build/grub_head.o
+                0x00000000c0117000                . = ALIGN (0x1000)
+ *fill*         0x00000000c0116001      0xfff 
+                0x00000000c0117000                PROVIDE (_end = .)
 
 /DISCARD/
  *(.comment)
@@ -201,92 +261,142 @@ LOAD build/printk.o
 LOAD build/console.o
 LOAD build/ctype.o
 LOAD build/string.o
+LOAD build/debug.o
 LOAD build/vsprintf.o
+LOAD build/numa.o
+LOAD build/bootmem.o
+LOAD build/page_alloc.o
+LOAD build/memory.o
 OUTPUT(build/kernel.bin elf32-i386)
 
-.debug_info     0x0000000000000000     0x1549
+.debug_info     0x0000000000000000     0x2b74
  .debug_info    0x0000000000000000      0x439 build/boot.o
- .debug_info    0x0000000000000439       0x8d build/main.o
- .debug_info    0x00000000000004c6       0xd0 build/panic.o
- .debug_info    0x0000000000000596      0x12a build/printk.o
- .debug_info    0x00000000000006c0      0x3db build/console.o
- .debug_info    0x0000000000000a9b       0x51 build/ctype.o
- .debug_info    0x0000000000000aec      0x48d build/string.o
- .debug_info    0x0000000000000f79      0x5d0 build/vsprintf.o
+ .debug_info    0x0000000000000439       0x84 build/main.o
+ .debug_info    0x00000000000004bd      0x85a build/setup.o
+ .debug_info    0x0000000000000d17       0x56 build/panic.o
+ .debug_info    0x0000000000000d6d      0x12a build/printk.o
+ .debug_info    0x0000000000000e97      0x3e2 build/console.o
+ .debug_info    0x0000000000001279       0x51 build/ctype.o
+ .debug_info    0x00000000000012ca      0x48d build/string.o
+ .debug_info    0x0000000000001757       0xd0 build/debug.o
+ .debug_info    0x0000000000001827      0x5d0 build/vsprintf.o
+ .debug_info    0x0000000000001df7      0x30a build/numa.o
+ .debug_info    0x0000000000002101      0x643 build/bootmem.o
+ .debug_info    0x0000000000002744      0x3a5 build/page_alloc.o
+ .debug_info    0x0000000000002ae9       0x8b build/memory.o
 
-.debug_abbrev   0x0000000000000000      0x6a1
+.debug_abbrev   0x0000000000000000      0xc67
  .debug_abbrev  0x0000000000000000      0x169 build/boot.o
- .debug_abbrev  0x0000000000000169       0x51 build/main.o
- .debug_abbrev  0x00000000000001ba       0x98 build/panic.o
- .debug_abbrev  0x0000000000000252       0xbd build/printk.o
- .debug_abbrev  0x000000000000030f      0x133 build/console.o
- .debug_abbrev  0x0000000000000442       0x47 build/ctype.o
- .debug_abbrev  0x0000000000000489       0xe1 build/string.o
- .debug_abbrev  0x000000000000056a      0x137 build/vsprintf.o
+ .debug_abbrev  0x0000000000000169       0x58 build/main.o
+ .debug_abbrev  0x00000000000001c1      0x21e build/setup.o
+ .debug_abbrev  0x00000000000003df       0x26 build/panic.o
+ .debug_abbrev  0x0000000000000405       0xbd build/printk.o
+ .debug_abbrev  0x00000000000004c2      0x133 build/console.o
+ .debug_abbrev  0x00000000000005f5       0x47 build/ctype.o
+ .debug_abbrev  0x000000000000063c       0xe1 build/string.o
+ .debug_abbrev  0x000000000000071d       0x98 build/debug.o
+ .debug_abbrev  0x00000000000007b5      0x137 build/vsprintf.o
+ .debug_abbrev  0x00000000000008ec       0xb8 build/numa.o
+ .debug_abbrev  0x00000000000009a4      0x1a1 build/bootmem.o
+ .debug_abbrev  0x0000000000000b45       0xcd build/page_alloc.o
+ .debug_abbrev  0x0000000000000c12       0x55 build/memory.o
 
-.debug_loc      0x0000000000000000      0x8e0
+.debug_loc      0x0000000000000000      0xd98
  .debug_loc     0x0000000000000000       0xe0 build/boot.o
  .debug_loc     0x00000000000000e0       0x2c build/main.o
- .debug_loc     0x000000000000010c       0x2c build/panic.o
- .debug_loc     0x0000000000000138       0x38 build/printk.o
- .debug_loc     0x0000000000000170      0x2a0 build/console.o
- .debug_loc     0x0000000000000410      0x2a0 build/string.o
- .debug_loc     0x00000000000006b0      0x230 build/vsprintf.o
+ .debug_loc     0x000000000000010c      0x2a0 build/setup.o
+ .debug_loc     0x00000000000003ac       0x38 build/printk.o
+ .debug_loc     0x00000000000003e4      0x2a0 build/console.o
+ .debug_loc     0x0000000000000684      0x2a0 build/string.o
+ .debug_loc     0x0000000000000924       0x2c build/debug.o
+ .debug_loc     0x0000000000000950      0x230 build/vsprintf.o
+ .debug_loc     0x0000000000000b80      0x1e0 build/bootmem.o
+ .debug_loc     0x0000000000000d60       0x38 build/page_alloc.o
 
-.debug_aranges  0x0000000000000000      0x110
+.debug_aranges  0x0000000000000000      0x250
  .debug_aranges
                 0x0000000000000000       0x38 build/boot.o
  .debug_aranges
                 0x0000000000000038       0x20 build/main.o
  .debug_aranges
-                0x0000000000000058       0x20 build/panic.o
+                0x0000000000000058       0x78 build/setup.o
  .debug_aranges
-                0x0000000000000078       0x20 build/printk.o
+                0x00000000000000d0       0x18 build/panic.o
  .debug_aranges
-                0x0000000000000098       0x20 build/console.o
+                0x00000000000000e8       0x20 build/printk.o
  .debug_aranges
-                0x00000000000000b8       0x18 build/ctype.o
+                0x0000000000000108       0x20 build/console.o
  .debug_aranges
-                0x00000000000000d0       0x20 build/string.o
+                0x0000000000000128       0x18 build/ctype.o
  .debug_aranges
-                0x00000000000000f0       0x20 build/vsprintf.o
+                0x0000000000000140       0x20 build/string.o
+ .debug_aranges
+                0x0000000000000160       0x20 build/debug.o
+ .debug_aranges
+                0x0000000000000180       0x20 build/vsprintf.o
+ .debug_aranges
+                0x00000000000001a0       0x18 build/numa.o
+ .debug_aranges
+                0x00000000000001b8       0x60 build/bootmem.o
+ .debug_aranges
+                0x0000000000000218       0x20 build/page_alloc.o
+ .debug_aranges
+                0x0000000000000238       0x18 build/memory.o
 
-.debug_ranges   0x0000000000000000       0x28
+.debug_ranges   0x0000000000000000       0xf0
  .debug_ranges  0x0000000000000000       0x28 build/boot.o
+ .debug_ranges  0x0000000000000028       0x68 build/setup.o
+ .debug_ranges  0x0000000000000090       0x50 build/bootmem.o
+ .debug_ranges  0x00000000000000e0       0x10 build/page_alloc.o
 
-.debug_line     0x0000000000000000      0x753
+.debug_line     0x0000000000000000      0xc01
  .debug_line    0x0000000000000000      0x109 build/boot.o
- .debug_line    0x0000000000000109       0x57 build/main.o
- .debug_line    0x0000000000000160        0x0 build/setup.o
- .debug_line    0x0000000000000160        0x0 build/init_task.o
- .debug_line    0x0000000000000160       0x4c build/panic.o
- .debug_line    0x00000000000001ac       0x7f build/printk.o
- .debug_line    0x000000000000022b      0x163 build/console.o
- .debug_line    0x000000000000038e       0x47 build/ctype.o
- .debug_line    0x00000000000003d5      0x11d build/string.o
- .debug_line    0x00000000000004f2      0x261 build/vsprintf.o
+ .debug_line    0x0000000000000109       0x40 build/main.o
+ .debug_line    0x0000000000000149      0x299 build/setup.o
+ .debug_line    0x00000000000003e2        0x0 build/init_task.o
+ .debug_line    0x00000000000003e2       0x1d build/panic.o
+ .debug_line    0x00000000000003ff       0x7f build/printk.o
+ .debug_line    0x000000000000047e      0x163 build/console.o
+ .debug_line    0x00000000000005e1       0x47 build/ctype.o
+ .debug_line    0x0000000000000628      0x11d build/string.o
+ .debug_line    0x0000000000000745       0x47 build/debug.o
+ .debug_line    0x000000000000078c      0x261 build/vsprintf.o
+ .debug_line    0x00000000000009ed       0x53 build/numa.o
+ .debug_line    0x0000000000000a40       0xf8 build/bootmem.o
+ .debug_line    0x0000000000000b38       0x7b build/page_alloc.o
+ .debug_line    0x0000000000000bb3       0x4e build/memory.o
 
-.debug_str      0x0000000000000000      0x6fe
- .debug_str     0x0000000000000000      0x32a build/boot.o
+.debug_str      0x0000000000000000      0xc7f
+ .debug_str     0x0000000000000000      0x325 build/boot.o
                                         0x389 (size before relaxing)
- .debug_str     0x000000000000032a       0x19 build/main.o
-                                         0xf6 (size before relaxing)
- .debug_str     0x0000000000000343       0x19 build/setup.o
-                                         0x8d (size before relaxing)
- .debug_str     0x000000000000035c       0x1d build/init_task.o
+ .debug_str     0x0000000000000325       0x24 build/main.o
+                                        0x101 (size before relaxing)
+ .debug_str     0x0000000000000349      0x281 build/setup.o
+                                        0x529 (size before relaxing)
+ .debug_str     0x00000000000005ca       0x1d build/init_task.o
                                          0x91 (size before relaxing)
- .debug_str     0x0000000000000379       0x1a build/panic.o
-                                         0xfc (size before relaxing)
- .debug_str     0x0000000000000393       0x3b build/printk.o
+ .debug_str     0x00000000000005e7        0xf build/panic.o
+                                         0xec (size before relaxing)
+ .debug_str     0x00000000000005f6       0x40 build/printk.o
                                         0x13a (size before relaxing)
- .debug_str     0x00000000000003ce      0x1c7 build/console.o
-                                        0x2d7 (size before relaxing)
- .debug_str     0x0000000000000595       0x13 build/ctype.o
+ .debug_str     0x0000000000000636      0x1c2 build/console.o
+                                        0x2e9 (size before relaxing)
+ .debug_str     0x00000000000007f8       0x13 build/ctype.o
                                          0xa2 (size before relaxing)
- .debug_str     0x00000000000005a8       0x89 build/string.o
+ .debug_str     0x000000000000080b       0x89 build/string.o
                                         0x182 (size before relaxing)
- .debug_str     0x0000000000000631       0xcd build/vsprintf.o
+ .debug_str     0x0000000000000894       0x12 build/debug.o
+                                         0xf9 (size before relaxing)
+ .debug_str     0x00000000000008a6       0xcd build/vsprintf.o
                                         0x218 (size before relaxing)
+ .debug_str     0x0000000000000973      0x1ed build/numa.o
+                                        0x2c2 (size before relaxing)
+ .debug_str     0x0000000000000b60       0xd0 build/bootmem.o
+                                        0x3e7 (size before relaxing)
+ .debug_str     0x0000000000000c30       0x43 build/page_alloc.o
+                                        0x346 (size before relaxing)
+ .debug_str     0x0000000000000c73        0xc build/memory.o
+                                         0xb0 (size before relaxing)
 
 .note.GNU-stack
                 0x0000000000000000        0x0
@@ -309,4 +419,14 @@ OUTPUT(build/kernel.bin elf32-i386)
  .note.GNU-stack
                 0x0000000000000000        0x0 build/string.o
  .note.GNU-stack
+                0x0000000000000000        0x0 build/debug.o
+ .note.GNU-stack
                 0x0000000000000000        0x0 build/vsprintf.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 build/numa.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 build/bootmem.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 build/page_alloc.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 build/memory.o

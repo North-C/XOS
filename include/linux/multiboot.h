@@ -97,6 +97,7 @@ typedef unsigned short   multiboot_uint16_t;
 typedef unsigned int     multiboot_uint32_t;
 typedef unsigned long long    multiboot_uint64_t;
 
+// 头部信息
 struct multiboot_header
 {
   /* Must be MULTIBOOT_MAGIC - see above. */
@@ -122,7 +123,7 @@ struct multiboot_header
   multiboot_uint32_t depth;
 };
 
-
+// OS 的引导信息
 struct multiboot_info
 {
   /* Multiboot info version number */
@@ -181,17 +182,25 @@ typedef struct multiboot_info multiboot_info_t;
 
 /**
  * @brief size表示相关结构的大小，单位是字节，他可能大于最小值20
- * base_addr_low 是启动地址的低32位，base_addr_high是高32位
- * 
+ * base_addr_low 是启动地址的低32位，base_addr_high是高32位,共64位
+ * length_low是内存区域大小的低32位，length_high是内存区域大小的高32位，总共是64位
+ * type是相应地址区间的类型，1代表可用RAM，所有其它的值代表保留区域
  */
 struct multiboot_mmap_entry
 {
   multiboot_uint32_t size;
-  multiboot_uint64_t addr;
-  multiboot_uint64_t len;
+  multiboot_uint32_t base_addr_low;
+  multiboot_uint32_t base_addr_high;
+  multiboot_uint32_t length_low;
+  multiboot_uint32_t length_high;
+  #define MULTIBOOT_MEMORY_AVAILABLE 1
+  #define MULTIBOOT_MEMORY_RESERVED 2
+  #define MULTIBOOT_MEMORY_ACPI_RECLAIMABLE       3
+  #define MULTIBOOT_MEMORY_NVS                    4
+  #define MULTIBOOT_MEMORY_BADRAM                 5
   multiboot_uint32_t type;
 } __attribute__((packed));
-typedef struct multiboot_mmap_entry multiboot_memory_map_t;
+typedef struct multiboot_mmap_entry multiboot_memory_map_entry_t;
 
 // 全局的 multiboot头指针
 extern multiboot_info_t *global_multiboot_info;

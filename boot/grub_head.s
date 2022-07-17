@@ -48,7 +48,7 @@ dd MBOOT_CHECKSUM       ; 检测数值，其含义在定义处
 extern kern_entry		; 声明内核 C 代码的入口函数
 start:
 	cli  				; 此时还没有设置好保护模式的中断处理，所以必须关闭中断
-    mov [global_multiboot_info], ebx	; 将 ebx 中存储的指针存入 global_multiboot_info 变量
+    mov [global_multiboot_info], ebx	; 将 ebx 中存储的指针存入 global_multiboot_info 变量的地址, bootloader 向其中保存信息
     
 	mov esp, STACK_TOP  	; 设置内核栈地址，按照 multiboot 规范，当需要使用堆栈时，OS 映象必须自己创建一个
     mov ebp, 0 			; 帧指针修改为 0

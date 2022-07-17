@@ -1,7 +1,7 @@
 #!Makefile
 # 文件目录设置
 BUILD_DIR = build# 生成的.o文件目录
-SOURCE_DIR = boot init arch/i386/kernel kernel lib   # 源文件目录 
+SOURCE_DIR = boot init arch/i386/kernel kernel lib mm # 源文件目录 
 ASSEMBLY_DIR = boot 				# 汇编文件目录
 
 vpath %.c $(SOURCE_DIR)       # 寻找.c文件依赖时，自动到 $(SOURCE_DIR)下寻找
@@ -15,7 +15,7 @@ C_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.o, $(notdir $(C_SOURCES
 
 # .s 源文件和目标文件
 S_SOURCES = $(foreach dir, $(ASSEMBLY_DIR), $(wildcard $(dir)/*.s))
-#S_SOURCES = $(shell find . -name "*.s")
+# S_SOURCES = $(shell find . -name "*.s")
 S_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.s, %.o, $(notdir $(S_SOURCES))))
 
 
@@ -36,13 +36,17 @@ $(BUILD_DIR)/%.o: %.c
 	$(CC) $(C_FLAGS) $< -o $@
 
 # 编译 .s文件
-$(BUILD_DIR)/%.o: $(ASSEMBLY_DIR)/%.s
+$(BUILD_DIR)/%.o: %.s
 	@echo 编译汇编文件 $< ...
 	$(ASM) $(ASM_FLAGS) $< -o $@		
 
 link:
 	@echo 链接内核文件...
 	$(LD) $(LD_FLAGS) $(S_OBJECTS) $(C_OBJECTS) -o ${BUILD_DIR}/kernel.bin
+
+.PHONY:grub
+grub:
+	$(ASM) $(ASM_FLAGS) ./boot/grub_head.s -o ./build/grub_head.o
 
 .PHONY:clean
 clean:
@@ -51,7 +55,7 @@ clean:
 .PHONY:update_image
 update_image:
 	cp ./build/kernel.bin ./hdisk/boot/
-	sleep 1
+#	sleep 1
 
 .PHONY:mount_image
 mount_image:
