@@ -6,6 +6,12 @@
 #include <linux/types.h>
 #include <asm-i386/io.h>
 #include <asm-i386/page.h>
+/**
+ * @brief 该文件包含 x86 的 IO 指令
+ * 
+ */
+
+#define IO_SPACE_LIMIT 0xffff
 
 /* 向端口port中写入一个字节data */
 static inline void outb(uint16_t port, uint8_t data)
@@ -68,6 +74,17 @@ static inline unsigned long virt_to_phys(volatile void * address)
 {
     return __pa(address);
 }
+
+
+#ifdef CONFIG_HIGHMEM64G
+#define page_to_phys(page)	((u64)(page - mem_map) << PAGE_SHIFT)
+#else
+#define page_to_phys(page)	((page - mem_map) << PAGE_SHIFT)
+#endif
+
+#define virt_to_bus virt_to_phys
+#define bus_to_virt phys_to_virt
+#define page_to_bus page_to_phys
 
 
 #endif

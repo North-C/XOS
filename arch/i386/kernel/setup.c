@@ -8,6 +8,9 @@
 #include <asm-i386/processor.h>
 #include <asm-i386/pgtable.h>
 #include <linux/string.h>
+#include <linux/ioport.h>
+#include <asm-i386/io.h>
+
 
 extern char _start, _end, _text, _etext, _data, _edata; 
 struct cpuinfo_x86 boot_cpu_data = { 0, 0, 0, 0, -1, 1, 0, 0, -1 };
@@ -37,9 +40,13 @@ unsigned long mmu_cr4_features;
 struct e820map e820;
 struct e820map bios_tmp;     // 暂时用于保存
 
-// 用户定义的 high memory 的大小
-static unsigned int highmem_pages __initdata = -1;
+/* For PCI or other memory-mapped resources */
+unsigned long pci_mem_start = 0x10000000;
 
+// 用户定义的 high memory 的大小
+static unsigned int highmem_pages = -1;
+
+// 静态函数声明
 static unsigned long find_max_low_pfn(void);
 static void register_bootmem_low_pages(unsigned long max_low_pfn);
 static void find_max_pfn(void);
@@ -51,57 +58,140 @@ static int sanitize_e820_map(struct e820entry * biosmap, int * pnr_map);
 static int copy_e820_map(struct e820entry * biosmap, int nr_map);
 static void add_memory_region(unsigned long long start, unsigned long long size, int type);
 static void print_memory_map(char *who);
-
 static unsigned long setup_memory(void);
 
-// TODO: 检测 rom 
-// static void __init probe_roms(void)
-// {
 
-// }
+struct resource standard_io_resources[] = {
+	{ "dma1", 0x00, 0x1f, IORESOURCE_BUSY },
+	{ "pic1", 0x20, 0x3f, IORESOURCE_BUSY },
+	{ "timer", 0x40, 0x5f, IORESOURCE_BUSY },
+	{ "keyboard", 0x60, 0x6f, IORESOURCE_BUSY },
+	{ "dma page reg", 0x80, 0x8f, IORESOURCE_BUSY },
+	{ "pic2", 0xa0, 0xbf, IORESOURCE_BUSY },
+	{ "dma2", 0xc0, 0xdf, IORESOURCE_BUSY },
+	{ "fpu", 0xf0, 0xff, IORESOURCE_BUSY }
+};
 
-// TODO: 完善 memory 
-// static void __init register_memory(unsigned long max_low_pfn)
-// {
-// 	unsigned long low_mem_size;
-// 	int i;
-// 	probe_roms();
-// 	for (i = 0; i < e820.nr_map; i++) {
-// 		struct resource *res;
-// 		if (e820.map[i].addr + e820.map[i].size > 0x100000000ULL)
-// 			continue;
-// 		res = alloc_bootmem_low(sizeof(struct resource));
-// 		switch (e820.map[i].type) {
-// 		case E820_RAM:	res->name = "System RAM"; break;
-// 		case E820_ACPI:	res->name = "ACPI Tables"; break;
-// 		case E820_NVS:	res->name = "ACPI Non-volatile Storage"; break;
-// 		default:	res->name = "reserved";
-// 		}
-// 		res->start = e820.map[i].addr;
-// 		res->end = res->start + e820.map[i].size - 1;
-// 		res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-// 		request_resource(&iomem_resource, res);
-// 		if (e820.map[i].type == E820_RAM) {
-// 			/*
-// 			 *  We dont't know which RAM region contains kernel data,
-// 			 *  so we try it repeatedly and let the resource manager
-// 			 *  test it.
-// 			 */
-// 			request_resource(res, &code_resource);
-// 			request_resource(res, &data_resource);
-// 		}
-// 	}
-// 	request_resource(&iomem_resource, &vram_resource);
+#define STANDARD_IO_RESOURCES (sizeof(standard_io_resources)/sizeof(struct resource))
 
-// 	/* request I/O space for devices used on all i[345]86 PCs */
-// 	for (i = 0; i < STANDARD_IO_RESOURCES; i++)
-// 		request_resource(&ioport_resource, standard_io_resources+i);
+static struct resource code_resource = { "Kernel code", 0x100000, 0 };
+static struct resource data_resource = { "Kernel data", 0, 0 };
+static struct resource vram_resource = { "Video RAM area", 0xa0000, 0xbffff, IORESOURCE_BUSY };
 
-// 	/* Tell the PCI layer not to allocate too close to the RAM area.. */
-// 	low_mem_size = ((max_low_pfn << PAGE_SHIFT) + 0xfffff) & ~0xfffff;
-// 	if (low_mem_size > pci_mem_start)
-// 		pci_mem_start = low_mem_size;
-// }
+// 系统的 ROM 资源
+#define MAXROMS 6
+static struct resource rom_resources[MAXROMS] = {
+	{ "System ROM", 0xF0000, 0xFFFFF, IORESOURCE_BUSY },   // 系统 BIOS的 ROM 区域
+	{ "Video ROM", 0xc0000, 0xc7fff, IORESOURCE_BUSY }
+};
+
+// ROM 区域的标志
+#define romsignature(x) (*(unsigned short *)(x) == 0xaa55)
+
+// 检测 rom 
+static void probe_roms(void)
+{
+    int roms = 1;
+    unsigned long base;
+    unsigned char *romstart;
+
+    request_resource(&iomem_resource, rom_resources+0);
+    // video ROM 的标准区域是处于 C000:0000 - C7FF:0000，通过检测签名来判断
+    for(base = 0xC0000; base < 0xE0000; base += 2048) {
+        romstart = bus_to_virt(base);
+        if(!romsignature(romstart))
+            continue;
+        request_resource(&iomem_resource, rom_resources + roms);
+        roms++;
+        break;
+    }
+    /* Extension roms at C800:0000 - DFFF:0000 */
+	for (base = 0xC8000; base < 0xE0000; base += 2048) {
+		unsigned long length;
+
+		romstart = bus_to_virt(base);
+		if (!romsignature(romstart))
+			continue;
+		length = romstart[2] * 512;
+		if (length) {
+			unsigned int i;
+			unsigned char chksum;
+
+			chksum = 0;
+			for (i = 0; i < length; i++)
+				chksum += romstart[i];
+
+			/* Good checksum? */
+			if (!chksum) {
+				rom_resources[roms].start = base;
+				rom_resources[roms].end = base + length - 1;
+				rom_resources[roms].name = "Extension ROM";
+				rom_resources[roms].flags = IORESOURCE_BUSY;
+
+				request_resource(&iomem_resource, rom_resources + roms);
+				roms++;
+				if (roms >= MAXROMS)
+					return;
+			}
+		}
+	}
+
+	/* Final check for motherboard extension rom at E000:0000 */
+	base = 0xE0000;
+	romstart = bus_to_virt(base);
+
+	if (romsignature(romstart)) {
+		rom_resources[roms].start = base;
+		rom_resources[roms].end = base + 65535;
+		rom_resources[roms].name = "Extension ROM";
+		rom_resources[roms].flags = IORESOURCE_BUSY;
+
+		request_resource(&iomem_resource, rom_resources + roms);
+	}
+}
+
+// 给所有的标准 RAM 和 ROM 资源请求地址空间，包含那些e820图中标记为 reserved 的区域
+static void register_memory(unsigned long max_low_pfn)
+{
+	unsigned long low_mem_size;
+	int i;
+	probe_roms();     // 检测 ROM 资源
+	for (i = 0; i < e820.nr_map; i++) {
+		struct resource *res;
+		if (e820.map[i].addr + e820.map[i].size > 0x100000000ULL)
+			continue;
+		res = alloc_bootmem_low(sizeof(struct resource));   // 分配内存
+		switch (e820.map[i].type) {
+		case E820_RAM:	res->name = "System RAM"; break;
+		case E820_ACPI:	res->name = "ACPI Tables"; break;
+		case E820_NVS:	res->name = "ACPI Non-volatile Storage"; break;
+		default:	res->name = "reserved";
+		}
+		res->start = e820.map[i].addr;
+		res->end = res->start + e820.map[i].size - 1;
+		res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+		request_resource(&iomem_resource, res);          // io 内存映射区域
+		if (e820.map[i].type == E820_RAM) {
+			/*
+			 *  We dont't know which RAM region contains kernel data,
+			 *  so we try it repeatedly and let the resource manager
+			 *  test it.
+			 */
+			request_resource(res, &code_resource);
+			request_resource(res, &data_resource);
+		}
+	}
+	request_resource(&iomem_resource, &vram_resource);
+
+	/* request I/O space for devices used on all i[345]86 PCs */
+	for (i = 0; i < STANDARD_IO_RESOURCES; i++)
+		request_resource(&ioport_resource, standard_io_resources+i);
+
+	/* 告知 PCI 层不要把内存分配的太靠近 RAM 区域  */
+	low_mem_size = ((max_low_pfn << PAGE_SHIFT) + 0xfffff) & ~0xfffff;
+	if (low_mem_size > pci_mem_start)
+		pci_mem_start = low_mem_size;
+}
 
 
 void setup_arch()
@@ -129,12 +219,9 @@ void setup_arch()
     
     // 建立内存页面管理机制
     paging_init();
-    while(1){
-
-    }
-    // register_memory(max_low_pfn);
-    printk("setup_arch done\n");
     
+    register_memory(max_low_pfn);
+    printk("setup_arch done\n");
     while(1);
 }
 
