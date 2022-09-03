@@ -203,6 +203,7 @@ struct multiboot_mmap_entry
 typedef struct multiboot_mmap_entry multiboot_memory_map_entry_t;
 
 // 全局的 multiboot头指针
-extern multiboot_info_t *global_multiboot_info;
+// extern multiboot_info_t *global_multiboot_info;
+extern void *global_multiboot_info __attribute__ ((__section__ (".data.init")));
 
 #endif /* ! MULTIBOOT_HEADER */

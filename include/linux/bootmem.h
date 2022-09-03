@@ -1,6 +1,9 @@
 #ifndef _LINUX_BOOTMEM_H
 #define _LINUX_BOOTMEM_H
 #include <linux/init.h>
+#include <linux/mmzone.h>
+#include <asm-i386/dma.h>
+#include <asm-i386/processor.h>
 
 // 系统内存中的每一个节点都有一个对应的 bootmem_data
 typedef struct bootmem_data{
@@ -18,12 +21,17 @@ extern unsigned long max_pfn;
 
 
 extern unsigned long __init init_bootmem(unsigned long start, unsigned long pages);
-extern void __init free_bootmem (unsigned long addr, unsigned long size);
+extern void __init free_bootmem(unsigned long addr, unsigned long size);
 extern void __init reserve_bootmem(unsigned long addr, unsigned long size);
+    
+extern void * __init __alloc_bootmem(unsigned long size, unsigned long align, unsigned long goal);
+
+extern void * __init __alloc_bootmem_node(pg_data_t *pgdat, unsigned long size, unsigned long align, unsigned long goal);
 
 #define alloc_bootmem_low_pages(x) \
     __alloc_bootmem((x), PAGE_SIZE, 0)
-    
-extern void * __init __alloc_bootmem(unsigned long size, unsigned long align, unsigned long goal);
+
+#define alloc_bootmem_node(pgdat, x) \
+    __alloc_bootmem_node((pgdat), (x), SMP_CACHE_BYTES, __pa(MAX_DMA_ADDRESS))
 
 #endif

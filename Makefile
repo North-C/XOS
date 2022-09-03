@@ -1,7 +1,7 @@
 #!Makefile
 # 文件目录设置
 BUILD_DIR = build# 生成的.o文件目录
-SOURCE_DIR = boot init arch/i386/kernel kernel lib mm # 源文件目录 
+SOURCE_DIR = boot init kernel lib mm arch/i386/kernel arch/i386/mm # 源文件目录 
 ASSEMBLY_DIR = boot 				# 汇编文件目录
 
 vpath %.c $(SOURCE_DIR)       # 寻找.c文件依赖时，自动到 $(SOURCE_DIR)下寻找
@@ -50,12 +50,12 @@ grub:
 
 .PHONY:clean
 clean:
-	$(RM) $(S_OBJECTS) $(C_OBJECTS) kernel.bin
+	$(RM) $(S_OBJECTS) $(C_OBJECTS) ${BUILD_DIR}/kernel.bin ${BUILD_DIR}/kernel.map
 
 .PHONY:update_image
 update_image:
 	cp ./build/kernel.bin ./hdisk/boot/
-#	sleep 1
+	sleep 1
 
 .PHONY:mount_image
 mount_image:

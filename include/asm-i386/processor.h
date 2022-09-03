@@ -32,6 +32,21 @@ struct cpuinfo_x86 {
 	unsigned long pgtable_cache_sz;
 } __attribute__((__aligned__(SMP_CACHE_BYTES)));
 
+
+// Intel CPU features in CR4
+#define X86_CR4_VME		0x0001	/* enable vm86 extensions */
+#define X86_CR4_PVI		0x0002	/* virtual interrupts flag enable */
+#define X86_CR4_TSD		0x0004	/* disable time stamp at ipl 3 */
+#define X86_CR4_DE		0x0008	/* enable debugging extensions */
+#define X86_CR4_PSE		0x0010	/* enable page size extensions */
+#define X86_CR4_PAE		0x0020	/* enable physical address extensions */
+#define X86_CR4_MCE		0x0040	/* Machine check enable */
+#define X86_CR4_PGE		0x0080	/* enable global pages */
+#define X86_CR4_PCE		0x0100	/* enable performance counters at ipl 3 */
+#define X86_CR4_OSFXSR		0x0200	/* enable fast FPU save and restore */
+#define X86_CR4_OSXMMEXCPT	0x0400	/* enable unmasked SSE exceptions */
+
+
 #define load_cr3(pgdir) asm volatile("movl %0, %%cr3": :"r"(__pa(pgdir)));
 
 #endif

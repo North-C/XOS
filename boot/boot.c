@@ -6,8 +6,9 @@
 
 uint32_t kern_stack_top;
 void kern_entry(void);
-extern void start_kernel(void);
 extern void *flush;
+void* global_multiboot_info;
+
 
 // 页目录表项，为啥放在.data.init段呢？为啥不放在.data段呢？
 pgd_t pgd[1024] __attribute__((__aligned__(PAGE_SIZE))) __attribute__ ((__section__(".data.init")));
@@ -17,6 +18,7 @@ pte_t pte[1024] __attribute__((__section__(".data.init")));
 // 页目录表的位置
 #define PAGE_DIR_TABLE_POS 0x90000
 
+unsigned long empty_zero_page[1024];    // 启动时的临时内存孔家
 
 /* 构建GDT */
 __init static struct gdt_desc make_gdt_desc(uint32_t *desc_addr, uint32_t limit, uint8_t attr_high, uint8_t attr_low)
@@ -34,7 +36,6 @@ __init static struct gdt_desc make_gdt_desc(uint32_t *desc_addr, uint32_t limit,
 
 __init static void gdt_create(void)
 {
-
     // GDT 放在0x900
     // 空描述符
     *((struct gdt_desc *)0x900) = make_gdt_desc((uint32_t *)0, 0, 0, 0);
@@ -80,7 +81,7 @@ __init static void gdt_create(void)
  *   共创建1024个页表
  *
  */
-__init static void page_create()
+static void __init page_create()
 {   
     int i = 0;
     // 清空页目录所占的空间
@@ -94,7 +95,7 @@ __init static void page_create()
     pgd[0].pgd = (uint32_t)pte | PAGE_USER | PAGE_RW | PAGE_PRESENT;
     pgd[768].pgd = (uint32_t)pte | PAGE_USER | PAGE_RW | PAGE_PRESENT;
     // 最后一个页目录项指向自己
-    pgd[1023].pgd = (uint32_t)pgd | PAGE_USER | PAGE_RW | PAGE_PRESENT;
+    // pgd[1023].pgd = (uint32_t)pgd | PAGE_USER | PAGE_RW | PAGE_PRESENT;
 
     /* 循环创建1024个PTE */
     // 初始化清空
@@ -115,7 +116,7 @@ __init static void page_create()
     *((struct gdt_desc *)0x918) = make_gdt_desc((uint32_t *)0xc00b8000, 0x00007, GDT_ATTR_HIGH, GDT_DATA_ATTR_LOW_DPL0);
 
     // 设置 gdtr的内容, 存放在c0000900
-    uint64_t gdt_operand = (((uint64_t)(uint32_t)0xc0000900 << 16) | (8 * 6 - 1));
+    uint64_t gdt_operand = (((uint64_t)(uint32_t)0xc0000900 << 16) | (8 * 20 - 1));
 
     // 设置cr3
     asm volatile("mov %0, %%cr3"
@@ -128,7 +129,7 @@ __init static void page_create()
                  : "=r"(cr0)
                  :);
     cr0 |= 0x80000000;
-    asm volatile("mov %0, %%cr0 "
+    asm volatile("mov %0, %%cr0"
                  :
                  : "r"(cr0));
     // 加载gdtr
@@ -150,7 +151,7 @@ __init void kern_entry(void)
 
     page_create();
     
-    // uint32_t kern_stack_top;
+    uint32_t kern_stack_top;
     // 切换内核栈
     asm volatile("movl %%esp, %0"
                  : "=r"(kern_stack_top));

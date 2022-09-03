@@ -10,6 +10,8 @@
 #include <linux/string.h>
 
 extern char _start, _end, _text, _etext, _data, _edata; 
+struct cpuinfo_x86 boot_cpu_data = { 0, 0, 0, 0, -1, 1, 0, 0, -1 };
+unsigned long mmu_cr4_features;
 
 // page frame 计算
 #define PFN_UP(x)   (((x) + PAGE_SHIFT-1) >> PAGE_SHIFT)  // 上一个页面边界
@@ -50,13 +52,65 @@ static int __init copy_e820_map(struct e820entry * biosmap, int nr_map);
 static void __init add_memory_region(unsigned long long start, unsigned long long size, int type);
 static void __init print_memory_map(char *who);
 
+static unsigned long __init setup_memory(void);
+
+// TODO: 检测 rom 
+// static void __init probe_roms(void)
+// {
+
+// }
+
+// TODO: 完善 memory 
+// static void __init register_memory(unsigned long max_low_pfn)
+// {
+// 	unsigned long low_mem_size;
+// 	int i;
+// 	probe_roms();
+// 	for (i = 0; i < e820.nr_map; i++) {
+// 		struct resource *res;
+// 		if (e820.map[i].addr + e820.map[i].size > 0x100000000ULL)
+// 			continue;
+// 		res = alloc_bootmem_low(sizeof(struct resource));
+// 		switch (e820.map[i].type) {
+// 		case E820_RAM:	res->name = "System RAM"; break;
+// 		case E820_ACPI:	res->name = "ACPI Tables"; break;
+// 		case E820_NVS:	res->name = "ACPI Non-volatile Storage"; break;
+// 		default:	res->name = "reserved";
+// 		}
+// 		res->start = e820.map[i].addr;
+// 		res->end = res->start + e820.map[i].size - 1;
+// 		res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+// 		request_resource(&iomem_resource, res);
+// 		if (e820.map[i].type == E820_RAM) {
+// 			/*
+// 			 *  We dont't know which RAM region contains kernel data,
+// 			 *  so we try it repeatedly and let the resource manager
+// 			 *  test it.
+// 			 */
+// 			request_resource(res, &code_resource);
+// 			request_resource(res, &data_resource);
+// 		}
+// 	}
+// 	request_resource(&iomem_resource, &vram_resource);
+
+// 	/* request I/O space for devices used on all i[345]86 PCs */
+// 	for (i = 0; i < STANDARD_IO_RESOURCES; i++)
+// 		request_resource(&ioport_resource, standard_io_resources+i);
+
+// 	/* Tell the PCI layer not to allocate too close to the RAM area.. */
+// 	low_mem_size = ((max_low_pfn << PAGE_SHIFT) + 0xfffff) & ~0xfffff;
+// 	if (low_mem_size > pci_mem_start)
+// 		pci_mem_start = low_mem_size;
+// }
+
+
 void __init setup_arch()
 {   
     // max_low_pfn 以低端内存区域表示的最大PFN
     // max_pfn 系统中可用的最大PFN
     // start_pfn 表示内存中内核映像以上第一个可以动态分配的页面
     // unsigned long start_pfn, max_pfn, max_low_pfn;
-    
+    unsigned long max_low_pfn;
     // unsigned long bootmp_size;
     int i;
 
@@ -69,13 +123,19 @@ void __init setup_arch()
 
     setup_memory_region();      // 将 e820图 的内容存放到安全的地址，构建内存映射图e820
 
-    // // 建立内存页面所需的数据结构
-    // max_low_pfn = setup_memory();  
-
-    // // 建立内存页面管理机制
-    // paging_init();
+    // 建立内存页面所需的数据结构
+    max_low_pfn = setup_memory(); 
+    printk("max_low_pfn: %x\n", max_low_pfn);
     
+    // 建立内存页面管理机制
+    paging_init();
+    while(1){
+
+    }
     // register_memory(max_low_pfn);
+    printk("setup_arch done\n");
+    
+    while(1);
 }
 
 #define LOWMEMSIZE()   (0x9f000)
@@ -110,8 +170,12 @@ static void __init setup_memory_region(void)
     // 消除e820当中的区域重叠
     sanitize_e820_map(bios_tmp.map, &bios_tmp.nr_map);
     // 将 E820_MAP 复制到一个安全的地方
-    copy_e820_map(bios_tmp.map, bios_tmp.nr_map);       // 省略了一些对于错误情况的处理
-    打印内存区域的分布情况
+    if(copy_e820_map(bios_tmp.map, bios_tmp.nr_map)<0){       // 省略了一些对于错误情况的处理打印内存区域的分布情况
+        e820.nr_map = 0;
+        // add_memory_region(0, LOWMEMSIZE(), E820_RAM);
+        // add_memory_region(HIGH_MEMORY, mem_size << 10, E820_RAM);
+    }
+
     printk("BIOS-provided pysical RAM map:\n");
     print_memory_map(who);
     printk("setup_memory_region done!\n");
@@ -121,7 +185,7 @@ static void __init setup_memory_region(void)
 static unsigned long __init setup_memory(void)
 {   
     // bootmap_size 
-    unsigned long bootmap_size, start_pfn, max_low_pfn;
+    unsigned long bootmap_size, start_pfn;
 
     start_pfn = PFN_UP(__pa(&_end)); // _end是内核镜像的最终地址，在链接脚本中提供
 
@@ -142,7 +206,6 @@ static unsigned long __init setup_memory(void)
     
     // 分配 物理页 0,用于很多BIOS功能的页面
     reserve_bootmem(0, PAGE_SIZE);
-
     return max_low_pfn;
 }
 
@@ -433,7 +496,7 @@ static void __init print_memory_map(char *who)
 
     for(i = 0; i < e820.nr_map; i++){
         printk("i = %d\n", i);
-        printk(" %s: %0x - %0x ", who, e820.map[i].addr, e820.map[i].addr + e820.map[i].size);
+        printk(" %s: %08x - %08x ", who, (uint32_t)e820.map[i].addr, (uint32_t)e820.map[i].addr + (uint32_t)e820.map[i].size);
         switch (e820.map[i].type){
         case E820_RAM:
             printk("(usable)\n");

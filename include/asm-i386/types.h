@@ -39,4 +39,6 @@ typedef unsigned long long  uint64_t;
 
 #define PG_SIZE 4096
 
+#define BITS_PER_LONG 32
+
 #endif

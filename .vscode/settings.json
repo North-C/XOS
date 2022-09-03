@@ -19,6 +19,13 @@
         "mmzone.h": "c",
         "pgtable-2level.h": "c",
         "cpufeature.h": "c",
-        "debug.h": "c"
+        "debug.h": "c",
+        "pgtable.h": "c",
+        "io.h": "c",
+        "list.h": "c",
+        "processor.h": "c",
+        "fixmap.h": "c",
+        "dma.h": "c",
+        "bitops.h": "c"
     }
 }

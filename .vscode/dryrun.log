@@ -1,7 +1,8 @@
 make --dry-run --keep-going --print-directory
 make: Entering directory '/root/project/OS'
 echo 链接内核文件...
-ld -T scripts/kernel.ld -m elf_i386 -nostdlib -Map build/kernel.map build/grub_head.o build/boot.o build/main.o build/setup.o build/init_task.o build/panic.o build/printk.o build/console.o build/ctype.o build/string.o build/debug.o build/vsprintf.o build/numa.o build/bootmem.o build/page_alloc.o build/memory.o -o build/kernel.bin
+ld -T scripts/kernel.ld -m elf_i386 -nostdlib -Map build/kernel.map build/grub_head.o build/boot.o build/main.o build/panic.o build/printk.o build/console.o build/ctype.o build/string.o build/debug.o build/vsprintf.o build/numa.o build/bootmem.o build/page_alloc.o build/memory.o build/setup.o build/init_task.o build/init.o -o build/kernel.bin
 cp ./build/kernel.bin ./hdisk/boot/
+sleep 1
 make: Leaving directory '/root/project/OS'
  

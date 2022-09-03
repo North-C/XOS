@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sun Jul 17 00:49:28 2022
+# Make data base, printed on Tue Aug 23 23:52:14 2022
 
 # Variables
 
@@ -33,9 +33,9 @@ CURDIR := /root/project/OS
 # makefile
 SHELL = /bin/sh
 # environment
-VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"1d735750dbb1b9066c7513078396ba0f.zh-cn","_translationsConfigFile":"/root/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn/tcf.json","_cacheRoot":"/root/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn","_resolvedLanguagePackCoreLocation":"/root/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9","_corruptedFile":"/root/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn/corrupted.info","_languagePackSupport":true}
+VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"cc0490d1397af23dc5bf44a96fe15dbb.zh-cn","_translationsConfigFile":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/tcf.json","_cacheRoot":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn","_resolvedLanguagePackCoreLocation":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/e4503b30fc78200f846c62cf8091b76ff5547662","_corruptedFile":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/corrupted.info","_languagePackSupport":true}
 # environment
-_ = /root/.vscode-server/bin/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9/node
+_ = /root/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/node
 # makefile (from 'Makefile', line 1)
 MAKEFILE_LIST :=  Makefile
 # 'override' directive
@@ -49,9 +49,9 @@ LESSOPEN = | /usr/bin/lesspipe %s
 # environment
 VSCODE_CWD = /root
 # environment
-SSH_CONNECTION = 192.168.138.1 57017 192.168.138.132 22
+SSH_CONNECTION = 192.168.138.1 56491 192.168.138.132 22
 # environment
-PATH = /root/.vscode-server/bin/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9/bin/remote-cli:/root/anaconda3/bin:/root/anaconda3/condabin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/go/bin
+PATH = /root/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/bin/remote-cli:/root/anaconda3/bin:/root/anaconda3/condabin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/go/bin
 # makefile (from 'Makefile', line 24)
 LD = ld
 # environment
@@ -69,7 +69,7 @@ LS_COLORS =
 # automatic
 %F = $(notdir $%)
 # makefile (from 'Makefile', line 4)
-SOURCE_DIR = boot init arch/i386/kernel kernel lib mm 
+SOURCE_DIR = boot init kernel lib mm arch/i386/kernel arch/i386/mm 
 # environment
 CONDA_EXE = /root/anaconda3/bin/conda
 # makefile (from 'Makefile', line 19)
@@ -77,7 +77,7 @@ S_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.s, %.o, $(notdir $(S_SOURCES
 # environment
 PWD = /root/project/OS
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-e1945cb7-0849-4884-9298-dbd18d15f842.sock
+VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-744e6ac7-4b49-404b-a5bc-72b0762e8f02.sock
 # automatic
 *D = $(patsubst %/,%,$(dir $*))
 # environment
@@ -117,7 +117,7 @@ CC = gcc
 # makefile (from 'Makefile', line 3)
 BUILD_DIR = build
 # environment
-XDG_SESSION_ID = 3
+XDG_SESSION_ID = 1
 # environment
 USER = root
 # makefile
@@ -139,13 +139,13 @@ MAKEFLAGS = pqrR
 # environment
 MFLAGS = -pqrR
 # environment
-SSH_CLIENT = 192.168.138.1 57017 22
+SSH_CLIENT = 192.168.138.1 56491 22
 # environment
 MAIL = /var/mail/root
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # environment
-BROWSER = /root/.vscode-server/bin/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9/bin/helpers/browser.sh
+BROWSER = /root/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/bin/helpers/browser.sh
 # environment
 VSCODE_HANDLES_SIGPIPE = true
 # default
@@ -193,15 +193,16 @@ _CE_CONDA =
 
 # Directories
 
-# init (device 2049, inode 1451529): 3 files, no impossibilities.
-# lib (device 2049, inode 1978494): 6 files, no impossibilities.
-# kernel (device 2049, inode 1444574): 5 files, no impossibilities.
+# init (device 2049, inode 1843533): 3 files, no impossibilities.
+# lib (device 2049, inode 1844497): 6 files, no impossibilities.
+# kernel (device 2049, inode 1844291): 5 files, no impossibilities.
 # . (device 2049, inode 1442764): 23 files, 2 impossibilities.
-# boot (device 2049, inode 1451267): 4 files, no impossibilities.
-# mm (device 2049, inode 1461143): 6 files, no impossibilities.
-# arch/i386/kernel (device 2049, inode 1976733): 4 files, no impossibilities.
+# boot (device 2049, inode 1451532): 5 files, no impossibilities.
+# mm (device 2049, inode 1845355): 6 files, no impossibilities.
+# arch/i386/kernel (device 2049, inode 1451427): 4 files, no impossibilities.
+# arch/i386/mm (device 2049, inode 1844290): 3 files, no impossibilities.
 
-# 51 files, 2 impossibilities in 7 directories.
+# 55 files, 2 impossibilities in 8 directories.
 
 # Implicit Rules
 
@@ -222,7 +223,7 @@ build/%.o: %.s
 build/numa.o: mm/numa.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'numa'
-#  Last modified 2022-07-17 00:48:32.678758146
+#  Last modified 2022-08-23 23:51:52.520048972
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -232,7 +233,7 @@ build/numa.o: mm/numa.c
 build/page_alloc.o: mm/page_alloc.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'page_alloc'
-#  Last modified 2022-07-17 00:48:32.710757948
+#  Last modified 2022-08-23 23:51:52.560048867
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -250,7 +251,7 @@ qemu:
 build/main.o: init/main.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'main'
-#  Last modified 2022-07-17 00:48:32.526759094
+#  Last modified 2022-08-23 23:51:52.408049266
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -276,6 +277,7 @@ link:
 # automatic
 # < := 
 # automatic
+ 
 # ^ := 
 # automatic
 # ? := 
@@ -284,9 +286,8 @@ link:
 #  recipe to execute (from 'Makefile', line 44):
 	@echo 链接内核文件...
 	$(LD) $(LD_FLAGS) $(S_OBJECTS) $(C_OBJECTS) -o ${BUILD_DIR}/kernel.bin
- 
 
-all: build/grub_head.o build/boot.o build/main.o build/setup.o build/init_task.o build/panic.o build/printk.o build/console.o build/ctype.o build/string.o build/debug.o build/vsprintf.o build/numa.o build/bootmem.o build/page_alloc.o build/memory.o link update_image
+all: build/grub_head.o build/boot.o build/main.o build/panic.o build/printk.o build/console.o build/ctype.o build/string.o build/debug.o build/vsprintf.o build/numa.o build/bootmem.o build/page_alloc.o build/memory.o build/setup.o build/init_task.o build/init.o link update_image
 #  Command line target.
 #  Implicit rule search has been done.
 #  File does not exist.
@@ -298,21 +299,21 @@ all: build/grub_head.o build/boot.o build/main.o build/setup.o build/init_task.o
 # Not a target:
 mm/numa.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-10 23:03:49.840554334
+#  Last modified 2022-08-21 06:46:29.305498778
 #  File has been updated.
 #  Successfully updated.
 
 # Not a target:
 boot/boot.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-10 18:39:56.386662034
+#  Last modified 2022-08-21 06:41:06.195397576
 #  File has been updated.
 #  Successfully updated.
 
 # Not a target:
 mm/page_alloc.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-10 23:29:23.66950591
+#  Last modified 2022-08-22 23:43:26.756753843
 #  File has been updated.
 #  Successfully updated.
 
@@ -324,14 +325,21 @@ mm/page_alloc.c:
 # Not a target:
 lib/string.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-16 06:39:41.130755637
+#  Last modified 2022-08-21 06:46:07.261639927
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+arch/i386/mm/init.c:
+#  Implicit rule search has been done.
+#  Last modified 2022-08-23 23:50:44.016206603
 #  File has been updated.
 #  Successfully updated.
 
 build/memory.o: mm/memory.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'memory'
-#  Last modified 2022-07-17 00:48:32.72275787
+#  Last modified 2022-08-23 23:51:52.572048835
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -341,14 +349,14 @@ build/memory.o: mm/memory.c
 # Not a target:
 kernel/console.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-16 06:54:24.131204591
+#  Last modified 2022-08-21 06:46:07.261639927
 #  File has been updated.
 #  Successfully updated.
 
 # Not a target:
 lib/vsprintf.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-16 05:51:22.788766687
+#  Last modified 2022-08-21 06:46:07.261639927
 #  File has been updated.
 #  Successfully updated.
 
@@ -361,7 +369,7 @@ lib/vsprintf.c:
 build/boot.o: boot/boot.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'boot'
-#  Last modified 2022-07-17 00:48:32.514759172
+#  Last modified 2022-08-23 23:51:52.400049286
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -371,21 +379,21 @@ build/boot.o: boot/boot.c
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-17 00:48:30.202773591
+#  Last modified 2022-08-23 23:51:31.236102847
 #  File has been updated.
 #  Successfully updated.
 
 # Not a target:
 mm/memory.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-10 23:18:27.527376835
+#  Last modified 2022-08-21 06:46:29.301498805
 #  File has been updated.
 #  Successfully updated.
 
 build/debug.o: lib/debug.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'debug'
-#  Last modified 2022-07-17 00:48:32.638758395
+#  Last modified 2022-08-23 23:51:52.484049065
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -415,25 +423,36 @@ update_image:
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 57):
 	cp ./build/kernel.bin ./hdisk/boot/
+	sleep 1
 
 # Not a target:
 build/grub_head.o:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-17 00:48:20.394834675
+#  Last modified 2022-08-23 23:51:44.73206917
 #  File has been updated.
 #  Successfully updated.
 
 # Not a target:
 lib/ctype.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-13 05:21:18.210488138
+#  Last modified 2022-08-21 06:46:07.261639927
 #  File has been updated.
 #  Successfully updated.
 
 build/panic.o: kernel/panic.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'panic'
-#  Last modified 2022-07-17 00:48:32.57075882
+#  Last modified 2022-08-23 23:51:52.420049234
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 35):
+	@echo 编译代码文件 $< ...
+	$(CC) $(C_FLAGS) $< -o $@
+
+build/init.o: arch/i386/mm/init.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'init'
+#  Last modified 2022-08-23 23:51:52.628048688
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -443,7 +462,7 @@ build/panic.o: kernel/panic.c
 # Not a target:
 arch/i386/kernel/setup.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-17 00:36:55.85832183
+#  Last modified 2022-08-23 21:57:49.869867992
 #  File has been updated.
 #  Successfully updated.
 
@@ -458,7 +477,7 @@ grub:
 build/printk.o: kernel/printk.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'printk'
-#  Last modified 2022-07-17 00:48:32.582758747
+#  Last modified 2022-08-23 23:51:52.432049202
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -474,7 +493,7 @@ build/printk.o: kernel/printk.c
 build/setup.o: arch/i386/kernel/setup.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'setup'
-#  Last modified 2022-07-17 00:48:32.550758945
+#  Last modified 2022-08-23 23:51:52.60004876
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -487,12 +506,12 @@ clean:
 #  File does not exist.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 53):
-	$(RM) $(S_OBJECTS) $(C_OBJECTS) kernel.bin
+	$(RM) $(S_OBJECTS) $(C_OBJECTS) ${BUILD_DIR}/kernel.bin ${BUILD_DIR}/kernel.map
 
 build/bootmem.o: mm/bootmem.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'bootmem'
-#  Last modified 2022-07-17 00:48:32.698758022
+#  Last modified 2022-08-23 23:51:52.540048919
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -502,14 +521,14 @@ build/bootmem.o: mm/bootmem.c
 # Not a target:
 kernel/panic.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-10 23:28:11.18657997
+#  Last modified 2022-08-21 06:46:29.301498805
 #  File has been updated.
 #  Successfully updated.
 
 build/string.o: lib/string.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'string'
-#  Last modified 2022-07-17 00:48:32.62675847
+#  Last modified 2022-08-23 23:51:52.472049097
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -519,7 +538,7 @@ build/string.o: lib/string.c
 build/vsprintf.o: lib/vsprintf.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'vsprintf'
-#  Last modified 2022-07-17 00:48:32.662758248
+#  Last modified 2022-08-23 23:51:52.512048992
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -536,44 +555,44 @@ umount_image:
 
 # Not a target:
 mm/bootmem.c:
+ 
 #  Implicit rule search has been done.
-#  Last modified 2022-07-10 23:31:51.071587875
+#  Last modified 2022-08-23 06:12:05.850079183
 #  File has been updated.
 #  Successfully updated.
 
 # Not a target:
 lib/debug.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-10 23:45:22.544545358
+#  Last modified 2022-08-21 06:46:29.301498805
 #  File has been updated.
 #  Successfully updated.
 
 # Not a target:
 init/main.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-10 21:52:50.717626839
+#  Last modified 2022-08-21 06:46:29.301498805
 #  File has been updated.
 #  Successfully updated.
 
 # Not a target:
 arch/i386/kernel/init_task.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-10 23:35:37.724964489
+#  Last modified 2022-08-21 06:46:07.153640617
 #  File has been updated.
 #  Successfully updated.
 
 # Not a target:
- 
 kernel/printk.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-17 00:07:25.514663497
+#  Last modified 2022-08-21 06:46:07.261639927
 #  File has been updated.
 #  Successfully updated.
 
 build/ctype.o: lib/ctype.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'ctype'
-#  Last modified 2022-07-17 00:48:32.610758572
+#  Last modified 2022-08-23 23:51:52.45604914
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -583,7 +602,7 @@ build/ctype.o: lib/ctype.c
 build/console.o: kernel/console.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'console'
-#  Last modified 2022-07-17 00:48:32.598758645
+#  Last modified 2022-08-23 23:51:52.448049161
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -593,7 +612,7 @@ build/console.o: kernel/console.c
 build/init_task.o: arch/i386/kernel/init_task.c
 #  Implicit rule search has been done.
 #  Implicit/static pattern stem: 'init_task'
-#  Last modified 2022-07-17 00:48:32.558758895
+#  Last modified 2022-08-23 23:51:52.612048731
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 35):
@@ -601,21 +620,21 @@ build/init_task.o: arch/i386/kernel/init_task.c
 	$(CC) $(C_FLAGS) $< -o $@
 
 # files hash-table stats:
-# Load=44/1024=4%, Rehash=0, Collisions=20/348=6%
+# Load=46/1024=4%, Rehash=0, Collisions=20/364=5%
 # VPATH Search Paths
 
-vpath %.c boot:init:arch/i386/kernel:kernel:lib:mm
+vpath %.c boot:init:kernel:lib:mm:arch/i386/kernel:arch/i386/mm
 
 # 1 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 102 / storage = 1049 B / avg = 10 B
-# current buf: size = 8162 B / used = 1049 B / count = 102 / avg = 10 B
+# strcache buffers: 1 (0) / strings = 107 / storage = 1114 B / avg = 10 B
+# current buf: size = 8162 B / used = 1114 B / count = 107 / avg = 10 B
 
-# strcache performance: lookups = 216 / hit rate = 52%
+# strcache performance: lookups = 228 / hit rate = 53%
 # hash-table stats:
-# Load=102/8192=1%, Rehash=0, Collisions=14/216=6%
-# Finished Make data base on Sun Jul 17 00:49:28 2022
+# Load=107/8192=1%, Rehash=0, Collisions=15/228=7%
+# Finished Make data base on Tue Aug 23 23:52:14 2022
 
  

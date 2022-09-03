@@ -20,4 +20,9 @@ static inline pmd_t * pmd_offset(pgd_t * dir, unsigned long address)
 
 #define __mk_pte(page_nr, pgprot) __pte(((page_nr) << PAGE_SHIFT) | pgprot_val(pgprot))
 
+// 在两层的页表机制中，pmd实质上是无效的
+#define set_pmd(pmdptr, pmdval) (*(pmdptr) = pmdval)
+#define set_pgd(pgdptr, pgdval) (*(pgdptr) = pgdval)
+
+
 #endif
