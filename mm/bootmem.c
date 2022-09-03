@@ -16,12 +16,12 @@ unsigned long min_low_pfn;
 extern pg_data_t contig_page_data;
 
 // 静态函数声明
-static unsigned long __init init_bootmem_core(pg_data_t *pgdat, unsigned long mapstart, unsigned long start, unsigned long end);
-static void __init free_bootmem_core(bootmem_data_t *bdata, unsigned long addr, unsigned long size);
-static void * __init __alloc_bootmem_core(bootmem_data_t *bdata, unsigned long size, unsigned long align, unsigned long goal);
-static void __init reserve_bootmem_core(bootmem_data_t *bdata, unsigned long addr, unsigned long size);
+static unsigned long init_bootmem_core(pg_data_t *pgdat, unsigned long mapstart, unsigned long start, unsigned long end);
+static void free_bootmem_core(bootmem_data_t *bdata, unsigned long addr, unsigned long size);
+static void * __alloc_bootmem_core(bootmem_data_t *bdata, unsigned long size, unsigned long align, unsigned long goal);
+static void reserve_bootmem_core(bootmem_data_t *bdata, unsigned long addr, unsigned long size);
 
-unsigned long __init init_bootmem(unsigned long start, unsigned long pages)
+unsigned long init_bootmem(unsigned long start, unsigned long pages)
 {
     max_low_pfn = pages;
     min_low_pfn = start;
@@ -40,7 +40,7 @@ unsigned long __init init_bootmem(unsigned long start, unsigned long pages)
  * @param end 物理内存的顶点 max_low_pfn
  * @return unsigned long 返回大小
  */
-static unsigned long __init init_bootmem_core(pg_data_t *pgdat, unsigned long mapstart, unsigned long start, unsigned long end)
+static unsigned long init_bootmem_core(pg_data_t *pgdat, unsigned long mapstart, unsigned long start, unsigned long end)
 {
     bootmem_data_t *bdata = pgdat->bdata;           
     unsigned long mapsize = ((end - start)+7)/8;        // 以字节为单位计算
@@ -60,7 +60,7 @@ static unsigned long __init init_bootmem_core(pg_data_t *pgdat, unsigned long ma
     return mapsize;
 }
 
-void __init free_bootmem (unsigned long addr, unsigned long size)
+void free_bootmem (unsigned long addr, unsigned long size)
 {
     return(free_bootmem_core(contig_page_data.bdata, addr, size));
 }
@@ -72,7 +72,7 @@ void __init free_bootmem (unsigned long addr, unsigned long size)
  * @param addr 内存地址
  * @param size 内存大小
  */
-static void __init free_bootmem_core(bootmem_data_t *bdata, unsigned long addr, unsigned long size)
+static void free_bootmem_core(bootmem_data_t *bdata, unsigned long addr, unsigned long size)
 {
     unsigned long i;
     unsigned long start;
@@ -97,12 +97,12 @@ static void __init free_bootmem_core(bootmem_data_t *bdata, unsigned long addr, 
 }
 
 // 开始时将位图中的所有位都设置为 1， 设置位全部不能用于分配，其后根据e820图来修改
-void __init reserve_bootmem(unsigned long addr, unsigned long size)
+void reserve_bootmem(unsigned long addr, unsigned long size)
 {
     reserve_bootmem_core(contig_page_data.bdata, addr, size);
 }
 
-static void __init reserve_bootmem_core(bootmem_data_t *bdata, unsigned long addr, unsigned long size)
+static void reserve_bootmem_core(bootmem_data_t *bdata, unsigned long addr, unsigned long size)
 {
     unsigned long i;
 
@@ -131,7 +131,7 @@ static void __init reserve_bootmem_core(bootmem_data_t *bdata, unsigned long add
     }
 }
 
-void * __init __alloc_bootmem(unsigned long size, unsigned long align, unsigned long goal)
+void * __alloc_bootmem(unsigned long size, unsigned long align, unsigned long goal)
 {
     pg_data_t *pgdat;
     void *ptr;
@@ -147,7 +147,7 @@ void * __init __alloc_bootmem(unsigned long size, unsigned long align, unsigned 
     return NULL;
 }
 
-void * __init __alloc_bootmem_node (pg_data_t *pgdat, unsigned long size, unsigned long align, unsigned long goal)
+void * __alloc_bootmem_node (pg_data_t *pgdat, unsigned long size, unsigned long align, unsigned long goal)
 {
 	void *ptr;
 
@@ -172,7 +172,7 @@ void * __init __alloc_bootmem_node (pg_data_t *pgdat, unsigned long size, unsign
  * @param goal 最佳的分配的起始地址，一般从物理地址0开始
  * @return void* 
  */
-static void * __init __alloc_bootmem_core(bootmem_data_t *bdata, unsigned long size, unsigned long align, unsigned long goal)
+static void * __alloc_bootmem_core(bootmem_data_t *bdata, unsigned long size, unsigned long align, unsigned long goal)
 {
     unsigned long i, start = 0;
     void *ret;

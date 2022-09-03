@@ -20,13 +20,13 @@ extern unsigned long min_low_pfn;
 extern unsigned long max_pfn;
 
 
-extern unsigned long __init init_bootmem(unsigned long start, unsigned long pages);
-extern void __init free_bootmem(unsigned long addr, unsigned long size);
-extern void __init reserve_bootmem(unsigned long addr, unsigned long size);
+extern unsigned long init_bootmem(unsigned long start, unsigned long pages);
+extern void free_bootmem(unsigned long addr, unsigned long size);
+extern void reserve_bootmem(unsigned long addr, unsigned long size);
     
-extern void * __init __alloc_bootmem(unsigned long size, unsigned long align, unsigned long goal);
+extern void * __alloc_bootmem(unsigned long size, unsigned long align, unsigned long goal);
 
-extern void * __init __alloc_bootmem_node(pg_data_t *pgdat, unsigned long size, unsigned long align, unsigned long goal);
+extern void * __alloc_bootmem_node(pg_data_t *pgdat, unsigned long size, unsigned long align, unsigned long goal);
 
 #define alloc_bootmem_low_pages(x) \
     __alloc_bootmem((x), PAGE_SIZE, 0)

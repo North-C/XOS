@@ -40,19 +40,19 @@ struct e820map bios_tmp;     // 暂时用于保存
 // 用户定义的 high memory 的大小
 static unsigned int highmem_pages __initdata = -1;
 
-static unsigned long __init find_max_low_pfn(void);
-static void __init register_bootmem_low_pages(unsigned long max_low_pfn);
-static void __init find_max_pfn(void);
+static unsigned long find_max_low_pfn(void);
+static void register_bootmem_low_pages(unsigned long max_low_pfn);
+static void find_max_pfn(void);
 void show_memory_map();
 
-static void __init setup_memory_region(void);
-static void __init init_biosmap();
-static int __init sanitize_e820_map(struct e820entry * biosmap, int * pnr_map);
-static int __init copy_e820_map(struct e820entry * biosmap, int nr_map);
-static void __init add_memory_region(unsigned long long start, unsigned long long size, int type);
-static void __init print_memory_map(char *who);
+static void setup_memory_region(void);
+static void init_biosmap();
+static int sanitize_e820_map(struct e820entry * biosmap, int * pnr_map);
+static int copy_e820_map(struct e820entry * biosmap, int nr_map);
+static void add_memory_region(unsigned long long start, unsigned long long size, int type);
+static void print_memory_map(char *who);
 
-static unsigned long __init setup_memory(void);
+static unsigned long setup_memory(void);
 
 // TODO: 检测 rom 
 // static void __init probe_roms(void)
@@ -104,7 +104,7 @@ static unsigned long __init setup_memory(void);
 // }
 
 
-void __init setup_arch()
+void setup_arch()
 {   
     // max_low_pfn 以低端内存区域表示的最大PFN
     // max_pfn 系统中可用的最大PFN
@@ -160,7 +160,7 @@ void  show_memory_map()
 
 
 // 获取到内存布局，将其保存到安全的地方
-static void __init setup_memory_region(void)
+static void setup_memory_region(void)
 {
     char *who = "BIOS-e820";
 
@@ -182,7 +182,7 @@ static void __init setup_memory_region(void)
 }
 
 // 确定可用物理页面的界限，构建引导内存分配器
-static unsigned long __init setup_memory(void)
+static unsigned long setup_memory(void)
 {   
     // bootmap_size 
     unsigned long bootmap_size, start_pfn;
@@ -210,7 +210,7 @@ static unsigned long __init setup_memory(void)
 }
 
 /* 查找系统中最大的可用PFN */
-static void __init find_max_pfn(void)
+static void find_max_pfn(void)
 {
     int i;
 
@@ -233,7 +233,7 @@ static void __init find_max_pfn(void)
  * @brief 寻找低端内存的最大pfn, 划分低端内存和高端内存区域
  * @return unsigned long 低端内存的最大pfn
  */
-static unsigned long __init find_max_low_pfn(void)
+static unsigned long find_max_low_pfn(void)
 {
     unsigned long max_low_pfn;
 
@@ -264,7 +264,7 @@ static unsigned long __init find_max_low_pfn(void)
  * 
  * @param max_low_pfn 
  */
-static void __init register_bootmem_low_pages(unsigned long max_low_pfn)
+static void register_bootmem_low_pages(unsigned long max_low_pfn)
 {
     int i;
 
@@ -297,7 +297,7 @@ static void __init register_bootmem_low_pages(unsigned long max_low_pfn)
 }
 
 // 用grub提供的内存描述信息初始化e820图
-static void __init init_biosmap()
+static void init_biosmap()
 {
     // 保存内存信息结构的缓冲区地址
     multiboot_uint32_t mmap_addr = ((multiboot_info_t*)global_multiboot_info)->mmap_addr;
@@ -323,7 +323,7 @@ static void __init init_biosmap()
  * @param pnr_map 物理内存区域的数量
  * @return int 
  */
-static int __init sanitize_e820_map(struct e820entry * biosmap, int * pnr_map){
+static int sanitize_e820_map(struct e820entry * biosmap, int * pnr_map){
     struct change_member{
         struct e820entry *pbios;        // 指向 原有的bios 内存条目
         unsigned long long addr;        // 对应的修改点的地址
@@ -440,7 +440,7 @@ static int __init sanitize_e820_map(struct e820entry * biosmap, int * pnr_map){
     return 0;
 }
 
-static int __init copy_e820_map(struct e820entry * biosmap, int nr_map)
+static int copy_e820_map(struct e820entry * biosmap, int nr_map)
 {
     if(nr_map < 2){     // 仅一个内存区域
         return -1;
@@ -475,7 +475,7 @@ static int __init copy_e820_map(struct e820entry * biosmap, int nr_map)
 }
 
 // 在全局变量e820增加一个内存区域条目，这是最后可用的结果
-static void __init add_memory_region(unsigned long long start, unsigned long long size, int type)
+static void add_memory_region(unsigned long long start, unsigned long long size, int type)
 {
     int x = e820.nr_map;
 
@@ -490,7 +490,7 @@ static void __init add_memory_region(unsigned long long start, unsigned long lon
     e820.nr_map++;
 }
 
-static void __init print_memory_map(char *who)
+static void print_memory_map(char *who)
 {
     int i;
 

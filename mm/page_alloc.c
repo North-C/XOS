@@ -17,14 +17,14 @@ zone_t *zone_table[MAX_NR_ZONES*MAX_NR_NODES];
 // 方便打印名称
 static char *zone_names[MAX_NR_ZONES] = {"DMA", "Normal", "HighMem" };
 // 管理区的平衡因子
-static int zone_balance_ratio[MAX_NR_ZONES] __initdata = {128, 128, 128, };
-static int zone_balance_min[MAX_NR_ZONES] __initdata = {20, 20, 20, };
-static int zone_balance_max[MAX_NR_ZONES] __initdata = {255, 255, 255, };
+static int zone_balance_ratio[MAX_NR_ZONES] = {128, 128, 128, };
+static int zone_balance_min[MAX_NR_ZONES] = {20, 20, 20, };
+static int zone_balance_max[MAX_NR_ZONES] = {255, 255, 255, };
 
 
 static inline void build_zonelists(pg_data_t *pgdat);
 
-void __init free_area_init(unsigned long *zones_size)
+void free_area_init(unsigned long *zones_size)
 {
  	free_area_init_core(0, &contig_page_data, &mem_map, zones_size, 0, 0, 0);
 }
@@ -42,7 +42,7 @@ void __init free_area_init(unsigned long *zones_size)
  * @param zholes_size 管理区内存空洞的大小
  * @param lmem_map 
  */
-void __init free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
+void free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 	unsigned long *zones_size, unsigned long zone_start_paddr, 
 	unsigned long *zholes_size, struct page *lmem_map)
 {

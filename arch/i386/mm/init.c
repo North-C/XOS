@@ -17,9 +17,9 @@
 #include <linux/mm.h>
 #include <linux/stdio.h>
 
-static void __init pagetable_init(void);
-static void __init fixrange_init(unsigned long start, unsigned long end, pgd_t *pgd_base);
-static void __init zone_sizes_init(void);
+static void pagetable_init(void);
+static void fixrange_init(unsigned long start, unsigned long end, pgd_t *pgd_base);
+static void zone_sizes_init(void);
 
 // 将页面映射表定义在此处
 pgd_t swapper_pg_dir[1024] __attribute__((__aligned__(PAGE_SIZE)));
