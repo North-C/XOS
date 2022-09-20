@@ -32,6 +32,15 @@ struct cpuinfo_x86 {
 	unsigned long pgtable_cache_sz;
 } __attribute__((__aligned__(SMP_CACHE_BYTES)));
 
+extern struct cpuinfo_x86 boot_cpu_data;
+
+#ifdef CONFIG_SMP
+extern struct cpuinfo_x86 cpu_data[];
+#define current_cpu_data cpu_data[smp_processor_id()]
+#else
+#define cpu_data (&boot_cpu_data)
+#define current_cpu_data boot_cpu_data
+#endif
 
 // Intel CPU features in CR4
 #define X86_CR4_VME		0x0001	/* enable vm86 extensions */
@@ -48,5 +57,12 @@ struct cpuinfo_x86 {
 
 
 #define load_cr3(pgdir) asm volatile("movl %0, %%cr3": :"r"(__pa(pgdir)));
+
+
+/* REP NOP (PAUSE) is a good thing to insert into busy-wait loops. */
+static inline void rep_nop(void)
+{
+	__asm__ __volatile__("rep;nop" ::: "memory");
+}
 
 #endif

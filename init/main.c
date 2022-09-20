@@ -3,6 +3,8 @@
 
 void start_kernel(void){
     printk("Start kernel\n");
-    setup_arch();    
+    setup_arch();
+    trap_init();
+    init_IRQ();   
     while(1);
 }

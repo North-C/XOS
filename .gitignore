@@ -5,6 +5,7 @@
 ./hdisk/*
 *.map
 .vscode/*
+Makefile
 # Prerequisites
 *.d
 

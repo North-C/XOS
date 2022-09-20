@@ -13,6 +13,11 @@ SECTIONS
 {
    . = 0x100000;
     PROVIDE( _start = .);
+    .text.init.grub :
+	{
+		*(.text.init.grub)
+		. = ALIGN(4096);
+	}
     .text.init :    /* 段名后须有空格 */
     {
         *(.text.init)

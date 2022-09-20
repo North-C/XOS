@@ -26,6 +26,18 @@
         "processor.h": "c",
         "fixmap.h": "c",
         "dma.h": "c",
-        "bitops.h": "c"
+        "bitops.h": "c",
+        "timex.h": "c",
+        "irq.h": "c",
+        "hw_irq.h": "c",
+        "cache.h": "c",
+        "spinlock.h": "c",
+        "desc.h": "c",
+        "errno.h": "c",
+        "interrupt.h": "c",
+        "kernel_stat.h": "c",
+        "smp.h": "c",
+        "threads.h": "c",
+        "delay.h": "c"
     }
 }

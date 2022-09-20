@@ -31,6 +31,21 @@ static inline void outsw(uint16_t port, void *addr, uint32_t count)
     asm volatile("cld; rep outsw ": "+S"(addr), "+c"(count) : "d"(port));
 }
 
+// 通过 重复的跳转，达到延迟时间的效果
+static inline void outb_p(uint8_t value, uint16_t port)
+{
+    asm volatile("outb %b0,%w1;\njmp 1f;\n1:\tjmp 1f;\n1:": : "a"(value), "Nd"(port));
+}
+
+static inline void outw_p(uint8_t value, uint16_t port)
+{
+    asm volatile("outw %w0,%w1;\njmp 1f;\n1:\tjmp 1f;\n1:": : "a"(value), "Nd"(port));
+}
+
+static inline void outl_p(uint8_t value, uint16_t port)
+{
+    asm volatile("outl %0,%w1;\njmp 1f;\n1:\tjmp 1f;\n1:": : "a"(value), "Nd"(port));
+}
 
 /* 从端口port中获取一个字节 */
 static inline uint8_t inb(uint16_t port)

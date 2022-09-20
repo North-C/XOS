@@ -1,7 +1,7 @@
 #!Makefile
 # 文件目录设置
 BUILD_DIR = build# 生成的.o文件目录
-SOURCE_DIR = boot init kernel lib mm arch/i386/kernel arch/i386/mm # 源文件目录 
+SOURCE_DIR = boot init kernel lib mm arch/i386/kernel arch/i386/mm arch/i386/lib# 源文件目录 
 ASSEMBLY_DIR = boot 				# 汇编文件目录
 
 vpath %.c $(SOURCE_DIR)       # 寻找.c文件依赖时，自动到 $(SOURCE_DIR)下寻找
@@ -17,7 +17,6 @@ C_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.o, $(notdir $(C_SOURCES
 S_SOURCES = $(foreach dir, $(ASSEMBLY_DIR), $(wildcard $(dir)/*.s))
 # S_SOURCES = $(shell find . -name "*.s")
 S_OBJECTS = $(addprefix $(BUILD_DIR)/, $(patsubst %.s, %.o, $(notdir $(S_SOURCES))))
-
 
 # 编译
 CC = gcc
@@ -42,7 +41,7 @@ $(BUILD_DIR)/%.o: %.s
 
 link:
 	@echo 链接内核文件...
-	$(LD) $(LD_FLAGS) $(S_OBJECTS) $(C_OBJECTS) -o ${BUILD_DIR}/kernel.bin
+	$(LD) $(LD_FLAGS) $(S_OBJECTS) build/entry.o $(C_OBJECTS) -o ${BUILD_DIR}/kernel.bin
 
 .PHONY:grub
 grub:

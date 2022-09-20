@@ -222,7 +222,6 @@ void setup_arch()
     
     register_memory(max_low_pfn);
     printk("setup_arch done\n");
-    while(1);
 }
 
 #define LOWMEMSIZE()   (0x9f000)
