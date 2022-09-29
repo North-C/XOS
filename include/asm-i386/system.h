@@ -19,7 +19,7 @@
 #define local_irq_save(x)	__asm__ __volatile__("pushfl ; popl %0 ; cli":"=g" (x): /* no input */ :"memory")
 #define local_irq_set(x)	__asm__ __volatile__("pushfl ; popl %0 ; sti":"=g" (x): /* no input */ :"memory")
 #else
-#define local_irq_save(x)	__save_and_cli(x)
+#define local_irq_save(x)	__save_and_cli(x)   // 从堆栈中获取 eflags，保存到 x 中
 #define local_irq_set(x)	__save_and_sti(x)
 #endif
 

@@ -4,8 +4,8 @@
 #include <linux/cache.h>
 
 typedef struct {
-    unsigned int __softirq_pending;
-    unsigned int __local_irq_count;
+    unsigned int __softirq_pending;   // 软中断请求
+    unsigned int __local_irq_count;     // 硬中断
     unsigned int __local_bh_count;
     unsigned int __syscall_count;
     struct task_struct * __ksoftirqd_task;
@@ -14,7 +14,13 @@ typedef struct {
 
 #include <linux/irq_cpustat.h>
 
+#define in_interrupt() ({ int __cpu = smp_processor_id(); \
+    (local_irq_count(__cpu) + local_bh_count(__cpu) != 0); })
+
 #define irq_enter(cpu, irq) (local_irq_count(cpu)++)
 #define irq_exit(cpu, irq) (local_irq_count(cpu)--)
+
+#define hardirq_trylock(cpu)	(local_irq_count(cpu) == 0)
+#define hardirq_endlock(cpu)	do { } while (0)
 
 #endif

@@ -79,8 +79,8 @@ ENTRY(system_call)
 	call *SYMBOL_NAME(sys_call_table)(,%eax,4)
 	movl %eax,EAX(%esp)		# save the return value
 ENTRY(ret_from_sys_call)
-//    movl SYMBOL_NAME(irq_stat),%ecx		# softirq_active
-//   testl SYMBOL_NAME(irq_stat)+4,%ecx	# softirq_mask
+	movl SYMBOL_NAME(irq_stat),%ecx		# softirq_active
+	testl SYMBOL_NAME(irq_stat)+4,%ecx	# softirq_mask
     jne   handle_softirq
 
 
@@ -113,7 +113,7 @@ ret_from_exception:
 
 	ALIGN
 handle_softirq:
-// 	call SYMBOL_NAME(do_softirq)
+	call SYMBOL_NAME(do_softirq)
 	jmp ret_from_intr
 
 	ALIGN

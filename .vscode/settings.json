@@ -38,6 +38,9 @@
         "kernel_stat.h": "c",
         "smp.h": "c",
         "threads.h": "c",
-        "delay.h": "c"
+        "delay.h": "c",
+        "atomic.h": "c",
+        "kernel.h": "c",
+        "hardirq.h": "c"
     }
 }

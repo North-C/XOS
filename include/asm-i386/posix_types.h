@@ -6,5 +6,8 @@
  */
 
 typedef unsigned int __kernel_size_t;
+typedef long __kernel_time_t;
+typedef long __kernel_suseconds_t;
+
 
 #endif

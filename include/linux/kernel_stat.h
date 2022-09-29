@@ -2,10 +2,12 @@
 #define _LINUX_KERNEL_STAT_H
 
 #include <linux/threads.h>
+#include <asm-i386/irq.h>
 
 #define DK_MAX_MAJOR 16
 #define DK_MAX_DISK 16
 
+/* 包含前后 */
 struct kernel_stat {
 	unsigned int per_cpu_user[NR_CPUS],
 	             per_cpu_nice[NR_CPUS],
@@ -17,6 +19,12 @@ struct kernel_stat {
 	unsigned int dk_drive_wblk[DK_MAX_MAJOR][DK_MAX_DISK];
 	unsigned int pgpgin, pgpgout;
 	unsigned int pswpin, pswpout;
+
+#if defined (__hppa__) 
+	unsigned int irqs[NR_CPUS][NR_IRQ_REGS][IRQ_PER_REGION];
+#elif !defined(CONFIG_ARCH_S390)
+	unsigned int irqs[NR_CPUS][NR_IRQS];
+#endif
 	unsigned int context_swtch;
 };
 

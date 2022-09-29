@@ -172,7 +172,6 @@ void trap_init(void)
     set_trap_gate(18,common_temp18);
     set_trap_gate(19,common_temp19);
 
-    printk("trap_init done\n");
 //     set_system_gate(SYSCALL_VECTOR,&system_call);   // 系统调用向量的初始化
 
     /*
@@ -186,6 +185,7 @@ void trap_init(void)
 	 * Should be a barrier for any external CPU state.
 	 */
 	// cpu_init();
+    printk("trap_init done\n");
 }
 
 

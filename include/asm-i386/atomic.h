@@ -12,6 +12,8 @@ typedef struct { volatile int counter; } atomic_t;
 
 #define atomic_set(v,i)		(((v)->counter) = (i))
 
+#define atomic_read(v)		((v)->counter)
+
 static __inline__ void atomic_inc(atomic_t *v)
 {
     __asm__ __volatile__(

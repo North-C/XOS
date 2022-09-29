@@ -1,14 +1,15 @@
 *.o
 *.bin
 *.img
+hda.img
 *.txt
-./hdisk/*
+hdisk/*
 *.map
-.vscode/*
+.vscode/
 Makefile
 # Prerequisites
-*.d
-
+*.dgit
+*/kernel.bin
 # Object files
 *.o
 *.ko
@@ -58,3 +59,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+build/kernel.bin
+hda.img
+.gitignore
+hdisk/boot/kernel.bin

@@ -26,4 +26,5 @@
     (void) (&_x == &_y);       \
     _x > _y ? _x : _y; })
 
+#define barrier() __asm__ __volatile__("": : :"memory")
 #endif
