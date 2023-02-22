@@ -1,5 +1,6 @@
 #ifndef _LINUX_SCHED_H
 #define _LINUX_SCHED_H
+#include <asm-i386/ptrace.h>
 
 // #define INIT_TASK_SIZE 2048*sizeof(long)
 // #define INIT_TASK(tsk) \
@@ -29,5 +30,9 @@
 //     long nice;
 //     //...
 // };
+
+extern void trap_init(void);
+extern void sched_init(void);
+extern void do_timer(struct pt_regs *);
 
 #endif

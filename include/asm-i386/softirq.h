@@ -16,4 +16,6 @@
 void __tasklet_schedule(struct tasklet_struct *t);
 void __tasklet_hi_schedule(struct tasklet_struct *t);
 
+void init_bh(int nr, void (*routine)(void));
+
 #endif

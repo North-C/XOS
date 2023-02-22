@@ -3,6 +3,7 @@
 
 #include <linux/bootmem.h>
 #include <linux/list.h>
+#include <linux/spinlock.h>
 
 // 三种zone的类型
 #define ZONE_DMA        0
@@ -18,20 +19,24 @@
 #define GFP_ZONEMASK  0x0f     // GFP标志位掩码，用于计算，具体定义在include/linux/mm.h 
 
 typedef struct free_area_struct{
-    struct list_head  free_list;
-    unsigned long    *map;   // 记录对应的地址
+    struct list_head  free_list;  // 空闲页面块
+    unsigned long    *map;   // 伙伴状态的位图
 }free_area_t;
 
 // 管理区的描述
 typedef struct zone_struct {
-    // TODO: 多核心同步相关的 spinlock 
-    // spinlock_t lock;
-    unsigned long free_pages;       // 空闲页面的总数
-    unsigned long pages_min;        // 管理区的极值
-    unsigned long pages_low;
-    unsigned long pages_high;
+    // TODO: 多核心同步相关的 spinlock
+    spinlock_t      lock;
+    unsigned long	offset;
+    unsigned long   free_pages;       // 空闲页面的总数
+    unsigned long	inactive_clean_pages;
+	unsigned long	inactive_dirty_pages;
+    unsigned long   pages_min;        // 管理区的极值
+    unsigned long   pages_low;
+    unsigned long   pages_high;
     int need_balance;              // 通知 页面换出kswapd进程 平衡该管理区
 
+    struct list_head	inactive_clean_list;
     free_area_t  free_area[MAX_ORDER];      // 空闲区域
     
     // 等待队列的哈希表，其中是等待页面释放的进程组成
@@ -59,7 +64,7 @@ typedef struct zonelist_struct {
 /** 
  * 表示内存的节点
 */
-struct pglist_data {
+typedef struct pglist_data {
     zone_t node_zones[MAX_NR_ZONES];          // 节点所在的管理区
     zonelist_t node_zonelists[GFP_ZONEMASK+1];     // 按照分配时的管理区顺序排列
     int nr_zones;                               // 管理区的数目
@@ -71,9 +76,7 @@ struct pglist_data {
     unsigned long node_size;                // 页面的总数
     int node_id;                            // 节点的id号
     struct pglist_data *node_next;          // 指向下一个节点，NULL为结束
-};
-
-typedef struct pglist_data pg_data_t;
+}pg_data_t;
 
 // 连续均匀的节点
 extern pg_data_t contig_page_data;    

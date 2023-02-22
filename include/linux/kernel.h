@@ -3,6 +3,16 @@
 #ifndef __LINUX_KERNEL_H
 #define __LINUX_KERNEL_H
 
+/* Optimization barrier */
+/* The "volatile" is due to gcc bugs */
+#define barrier() __asm__ __volatile__("": : :"memory")
+
+//#ifdef __i386__
+#define FASTCALL(x)	x __attribute__((regparm(3)))
+// #else
+// #define FASTCALL(x)	x
+// #endif
+
 // 内核的输出信息
 #define KERN_EMERG "<0>"
 #define KERN_ALERT "<1>"

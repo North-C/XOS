@@ -13,6 +13,8 @@
 #define __save_and_cli(x)	do { __save_flags(x); __cli(); } while(0);
 #define __save_and_sti(x)	do { __save_flags(x); __sti(); } while(0);
 
+#define cli() __cli()
+#define sti() __sti()
 
 /* For spinlocks etc */
 #if 0
@@ -26,5 +28,8 @@
 #define local_irq_restore(x)	__restore_flags(x)
 #define local_irq_disable()	__cli()
 #define local_irq_enable()	__sti()
+
+#define mb() __asm__ __volatile__ ("lock; addl $0, 0(%%esp)": : :"memory")
+#define rmb() mb()
 
 #endif

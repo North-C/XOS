@@ -8,6 +8,8 @@
 #include <linux/spinlock.h>
 #include <asm-i386/softirq.h>
 #include <linux/debug.h>
+#include <asm-i386/system.h>
+#include <asm-i386/interrupt.h>
 
 // 每个CPU自己的软中断控制结构
 irq_cpustat_t irq_stat[NR_CPUS] ____cacheline_aligned;
@@ -113,14 +115,13 @@ restart:
 
 /** 老式的 bh */
 static void (*bh_base[32])(void);
-struct tasklet_struct bh_task_vec[32];
 
-static inline void mark_bh(int nr)
+void init_bh(int nr, void (*routine)(void))
 {
-	tasklet_hi_schedule(bh_task_vec + nr);
+	bh_base[nr] = routine;
+	mb();
 }
-extern void init_bh(int nr, void (*routine)(void));
-extern void remove_bh(int nr);
+
 
 // 通过该锁将 bh 进行串行化
 spinlock_t global_bh_lock = SPIN_LOCK_UNLOCKED;

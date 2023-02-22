@@ -7,11 +7,11 @@
 #include  <asm-i386/signal.h>
 #include <asm-i386/errno.h>
 #include <asm-i386/smp.h>
+#include <linux/mm.h>
 #include <asm-i386/hardirq.h>
 #include <linux/interrupt.h>
 #include <linux/kernel_stat.h>
-
-extern struct kernel_stat kstat;
+#include <linux/slab.h>
 
 // 不产生控制码的响应
 static void enable_none(unsigned int irq) { }
@@ -136,8 +136,8 @@ int request_irq(unsigned int irq,
 	if (!handler)
 		return -EINVAL;
 	// TODO: 分配内存
-	// action = (struct irqaction *)
-	// 		kmalloc(sizeof(struct irqaction), GFP_KERNEL);
+	action = (struct irqaction *)
+			kmalloc(sizeof(struct irqaction), GFP_KERNEL);
 	if (!action)
 		return -ENOMEM;
 
@@ -149,8 +149,8 @@ int request_irq(unsigned int irq,
 	action->dev_id = dev_id;
 
 	retval = setup_irq(irq, action);   // 将 action 加入到中断请求队列
-	// if (retval)
-	// 	kfree(action);
+	if (retval)
+		kfree(action);
 	return retval;
 }
 

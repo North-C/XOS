@@ -17,9 +17,14 @@ struct irqaction{
     struct irqaction *next;
 };
 
+struct softirq_action
+{
+    void	(*action)(struct softirq_action *);
+    void	*data;
+};
 
 enum {
-	TIMER_BH = 0,
+	TIMER_BH = 0,   // 时钟中断
 	TQUEUE_BH,
 	DIGI_BH,
 	SERIAL_BH,
@@ -63,11 +68,6 @@ struct tasklet_head
 	struct tasklet_struct *list;
 } __attribute__ ((__aligned__(SMP_CACHE_BYTES)));
 
-struct softirq_action
-{
-    void (*action)(struct softirq_action *);
-    void *data;
-};
 
 #define __cpu_raise_softirq(cpu, nr) do { softirq_pending(cpu) |= 1UL << (nr); } while (0)
 
@@ -95,5 +95,12 @@ static inline void tasklet_hi_schedule(struct tasklet_struct *t)
 #define tasklet_trylock(t) 1
 #define tasklet_unlock_wait(t) do{ } while(0)
 #define tasklet_unlock(t) do{ } while(0)
+
+extern struct tasklet_struct bh_task_vec[32];
+
+static inline void mark_bh(int nr)
+{
+	tasklet_hi_schedule(bh_task_vec + nr);
+}
 
 #endif

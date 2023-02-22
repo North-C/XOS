@@ -1,7 +1,8 @@
 #ifndef _LINUX_BOOTMEM_H
 #define _LINUX_BOOTMEM_H
-#include <linux/init.h>
 #include <linux/mmzone.h>
+#include <linux/init.h>
+#include <asm-i386/page.h>
 #include <asm-i386/dma.h>
 #include <asm-i386/processor.h>
 
@@ -22,11 +23,11 @@ extern unsigned long max_pfn;
 
 extern unsigned long init_bootmem(unsigned long start, unsigned long pages);
 extern void free_bootmem(unsigned long addr, unsigned long size);
+extern unsigned long free_all_bootmem (void);
 extern void reserve_bootmem(unsigned long addr, unsigned long size);
-    
 extern void * __alloc_bootmem(unsigned long size, unsigned long align, unsigned long goal);
-
-extern void * __alloc_bootmem_node(pg_data_t *pgdat, unsigned long size, unsigned long align, unsigned long goal);
+// extern unsigned long free_all_bootmem_node(pg_data_t *pgdat);
+extern void * __alloc_bootmem_node(struct pglist_data *pgdat, unsigned long size, unsigned long align, unsigned long goal);
 
 #define alloc_bootmem_low_pages(x) \
     __alloc_bootmem((x), PAGE_SIZE, 0)
@@ -36,6 +37,7 @@ extern void * __alloc_bootmem_node(pg_data_t *pgdat, unsigned long size, unsigne
 
 #define alloc_bootmem(x) \
 	__alloc_bootmem((x), SMP_CACHE_BYTES, __pa(MAX_DMA_ADDRESS))
+
 #define alloc_bootmem_low(x) \
 	__alloc_bootmem((x), SMP_CACHE_BYTES, 0)
     

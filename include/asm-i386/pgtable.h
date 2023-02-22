@@ -35,6 +35,11 @@ extern unsigned long mmu_cr4_features;
 
 #define __pmd_offset(address) (((address) >> PMD_SHIFT) & (PTRS_PER_PMD - 1))
 
+/*
+ * Permanent address of a page. Obviously must never be
+ * called on a highmem page.
+ */
+#define page_address(page) ((page)->virtual)
 #define pages_to_mb(x) ((x) >> (20-PAGE_SHIFT))
 
 #define PGDIR_SIZE  (1UL << PGDIR_SHIFT)

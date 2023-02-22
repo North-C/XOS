@@ -61,12 +61,14 @@ static __inline__ int test_and_set_bit(int nr, volatile void * addr)
     return oldbit;
 }
 
-
+// 生成一个nr对应位为1，而其他位为0的字节（共32位），通过按位与 将其应用于包含指定位号的字节
 static __inline__ int constant_test_bit(int nr, const volatile void * addr)
 {
     return ((1UL << (nr&31)) & (((const volatile unsigned int *) addr)[nr >> 5])) != 0;
 }
 
+// bt指令从第二操作数指定的位数组选出第一操作数指定的一个指定位，并且将该位的值存进标志寄存器的 CF 位。第二个指令 sbb 从第二操作数中减去第一操作数，再减去 CF 的值。
+// 因此，这里将一个从给定位数组中的给定位号的值写进标志寄存器的 CF 位，并且执行 sbb 指令计算： 00000000 - CF，并将结果写进 oldbit 变量。
 static __inline__ int variable_test_bit(int nr, volatile void * addr)
 {
     int oldbit;
@@ -78,7 +80,8 @@ static __inline__ int variable_test_bit(int nr, volatile void * addr)
     return oldbit;
 }
 
-// GCC扩展，判断是常量还是变量
+// 知晓位数组中一个给定的位是否被置位
+// __builtin_constant_p 是GCC扩展，可以判断是常量还是变量
 #define test_bit(nr, addr) \
 (__builtin_constant_p(nr) ? \
 constant_test_bit((nr), (addr)) : \
@@ -93,7 +96,6 @@ static __inline__ void set_bit(int nr, volatile void * addr)
 		:"Ir" (nr));
 }
 
-
 /** 
  * ffz: find first zero in word
  */
@@ -106,5 +108,31 @@ static __inline__ unsigned long ffz(unsigned long word)
     return word;
 }
 
+static __inline__ void change_bit(int nr, volatile void * addr)
+{
+	__asm__ __volatile__( LOCK_PREFIX
+		"btcl %1,%0"
+		:"=m" (ADDR)
+		:"Ir" (nr));
+}
+
+static __inline__ void clear_bit(int nr, volatile void * addr)
+{
+	__asm__ __volatile__( LOCK_PREFIX
+		"btrl %1,%0"
+		:"=m" (ADDR)
+		:"Ir" (nr));
+}
+
+static __inline__ int test_and_change_bit(int nr, volatile void * addr)
+{
+	int oldbit;
+
+	__asm__ __volatile__( LOCK_PREFIX
+		"btcl %2,%1\n\tsbbl %0,%0"
+		:"=r" (oldbit),"=m" (ADDR)
+		:"Ir" (nr) : "memory");
+	return oldbit;
+}
 
 #endif

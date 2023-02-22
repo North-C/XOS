@@ -204,9 +204,6 @@ void setup_arch()
     // unsigned long bootmp_size;
     int i;
 
-    // printk("kernel in memory start: 0x%08x\n", &_start);
-    // printk("kernel in memory end: 0x%08x\n", &_end - 0xc0000000);
-    // printk("kernel in memory used: %d KB\n\n", (&_end - 0xc0000000 - &_start + 1023)/1024);
     printk("kernel in memory start: 0x%08x\nkernel in memory end: 0x%08x\nkernel in memory used: %d KB\n\n ",&_start, &_end - 0xc0000000, (&_end - 0xc0000000 - &_start + 1023)/1024);
 
     show_memory_map();
@@ -274,6 +271,7 @@ static unsigned long setup_memory(void)
     unsigned long bootmap_size, start_pfn;
 
     start_pfn = PFN_UP(__pa(&_end)); // _end是内核镜像的最终地址，在链接脚本中提供
+    printk("start_pfn = 0x%x\n", start_pfn);
 
     find_max_pfn();         // 查找系统中最大的可用PFN
 
@@ -581,8 +579,8 @@ static void print_memory_map(char *who)
     int i;
 
     for(i = 0; i < e820.nr_map; i++){
-        printk("i = %d\n", i);
-        printk(" %s: %08x - %08x ", who, (uint32_t)e820.map[i].addr, (uint32_t)e820.map[i].addr + (uint32_t)e820.map[i].size);
+        // printk("i = %d\n", i);
+        printk(" %s: 0x%08x - 0x%08x ", who, (uint32_t)e820.map[i].addr, (uint32_t)e820.map[i].addr + (uint32_t)e820.map[i].size);
         switch (e820.map[i].type){
         case E820_RAM:
             printk("(usable)\n");
@@ -602,5 +600,3 @@ static void print_memory_map(char *who)
         }
     }
 }
-
-

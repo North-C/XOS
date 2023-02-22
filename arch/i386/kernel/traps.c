@@ -184,7 +184,7 @@ void trap_init(void)
 	/*
 	 * Should be a barrier for any external CPU state.
 	 */
-	// cpu_init();
+	// cpu_init();         // 暂时没有必要设置
     printk("trap_init done\n");
 }
 

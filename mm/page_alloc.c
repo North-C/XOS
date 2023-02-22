@@ -1,10 +1,20 @@
-#include <linux/mm.h>
 #include <linux/bootmem.h>
+#include <linux/mm.h>
 #include <linux/mmzone.h>
-#include <asm-i386/page.h>
+#include <linux/spinlock.h>
 #include <linux/debug.h>
 #include <linux/string.h>
 #include <linux/kernel.h>
+#include <linux/threads.h>
+#include <asm-i386/page.h>
+#include <asm-i386/bitops.h>
+#include <asm-i386/pgtable.h>
+
+
+/*
+ * Temporary debugging check.
+ */
+#define BAD_RANGE(zone,x) (((zone) != (x)->zone) || (((x)-mem_map) < (zone)->offset) || (((x)-mem_map) >= (zone)->offset+(zone)->size))
 
 // 全局的内存节点链表
 pg_data_t *pgdat_list;      
@@ -20,6 +30,16 @@ static char *zone_names[MAX_NR_ZONES] = {"DMA", "Normal", "HighMem" };
 static int zone_balance_ratio[MAX_NR_ZONES] = {128, 128, 128, };
 static int zone_balance_min[MAX_NR_ZONES] = {20, 20, 20, };
 static int zone_balance_max[MAX_NR_ZONES] = {255, 255, 255, };
+
+
+
+#define memlist_init(x) INIT_LIST_HEAD(x)
+#define memlist_add_head list_add
+#define memlist_add_tail list_add_tail
+#define memlist_del list_del
+#define memlist_entry list_entry
+#define memlist_next(x) ((x)->next)
+#define memlist_prev(x) ((x)->prev)
 
 
 static inline void build_zonelists(pg_data_t *pgdat);
@@ -56,13 +76,13 @@ void free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 		BUG();
 	}
 	
-	totalpages = 0;
+	totalpages = 0;   // 初始化
 	for (i = 0; i < MAX_NR_ZONES; i++) {  // 计算节点的总大小
 		unsigned long size = zones_size[i];
 		totalpages += size;
 	}
 	realtotalpages = totalpages;
-	if (zholes_size)
+	if (zholes_size)    // 计算实际内存页面数
 		for (i = 0; i < MAX_NR_ZONES; i++)
 			realtotalpages -= zholes_size[i];
 			
@@ -71,6 +91,7 @@ void free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 	// 分配局部lmem_map，设置gmap位，在UMA当中，gmap就是mem_map
 	map_size = (totalpages + 1) * sizeof(struct page);
 	if (lmem_map == (struct page *)0) {
+		printk("pgdat: %x\n", pgdat);
 		lmem_map = (struct page *) alloc_bootmem_node(pgdat, map_size);
 		lmem_map = (struct page *)(PAGE_OFFSET + 
 			MAP_ALIGN((unsigned long)lmem_map - PAGE_OFFSET));
@@ -99,7 +120,7 @@ void free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 		zone->size = size;
 		zone->name = zone_names[j];
 		// TODO: zone 当中的 spinlock
-		// zone->lock = SPIN_LOCK_UNLOCKED;
+		zone->lock = SPIN_LOCK_UNLOCKED;
 		zone->zone_pgdat = pgdat;
 		zone->free_pages = 0;
 		zone->need_balance = 0;
@@ -177,6 +198,19 @@ void free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 	}
 	// 构造节点的管理区回退链表
 	build_zonelists(pgdat);
+}
+
+/*
+ * Common helper functions.
+ */
+unsigned long __get_free_pages(int gfp_mask, unsigned long order)
+{
+	struct page * page;
+
+	page = alloc_pages(gfp_mask, order);
+	if (!page)
+		return 0;
+	return (unsigned long) page_address(page);
 }
 
 /**
@@ -259,4 +293,320 @@ static inline unsigned long wait_table_size(unsigned long pages)
 static inline unsigned long wait_table_bits(unsigned long size)
 {
 	return ffz(~size);
+}
+
+// static void FASTCALL(__free_pages_ok (struct page *page, unsigned long order));
+static void __free_pages_ok (struct page *page, unsigned long order)
+{
+	unsigned long index, page_idx, mask, flags;
+	free_area_t *area;
+	struct page *base;
+	zone_t *zone;
+
+    /*
+     * Yes, think what happens when other parts of the kernel take
+     * a reference to a page in order to pin it for io. -ben
+     */
+//    if (PageLRU(page)) {
+//        if (unlikely(in_interrupt()))
+//            BUG();
+//        lru_cache_del(page);
+//    }
+
+	// if (page->buffers)
+	// 	BUG();
+	// if (page->mapping)
+	// 	BUG();
+	if (!VALID_PAGE(page))
+		BUG();
+	// if (PageSwapCache(page))
+	// 	BUG();
+	// if (PageLocked(page))
+	// 	BUG();
+	// if (PageDecrAfter(page))
+	// 	BUG();
+	// if (PageActive(page))
+	// 	BUG();
+	// if (PageInactiveDirty(page))
+	// 	BUG();
+	// if (PageInactiveClean(page))
+	// 	BUG();
+
+	page->flags &= ~((1<<PG_referenced) | (1<<PG_dirty));
+	// page->age = PAGE_AGE_START;
+	
+	zone = page_zone(page);
+
+	mask = (~0UL) << order;
+	base = mem_map + zone->offset;
+	page_idx = page - base;
+	if (page_idx & ~mask)
+		BUG();
+	index = page_idx >> (1 + order);
+
+	area = zone->free_area + order;
+
+	spin_lock_irqsave(&zone->lock, flags);
+
+	zone->free_pages -= mask;
+
+	while (mask + (1 << (MAX_ORDER-1))) {
+		struct page *buddy1, *buddy2;
+
+		if (area >= zone->free_area + MAX_ORDER)
+			BUG();
+		if (!test_and_change_bit(index, area->map))
+			/*
+			 * the buddy page is still allocated.
+			 */
+			break;
+		/*
+		 * Move the buddy up one level.
+		 */
+		buddy1 = base + (page_idx ^ -mask);
+		buddy2 = base + page_idx;
+		if (BAD_RANGE(zone,buddy1))
+			BUG();
+		if (BAD_RANGE(zone,buddy2))
+			BUG();
+
+		memlist_del(&buddy1->list);
+		mask <<= 1;
+		area++;
+		index >>= 1;
+		page_idx &= mask;
+	}
+	memlist_add_head(&(base + page_idx)->list, &area->free_list);
+
+	spin_unlock_irqrestore(&zone->lock, flags);
+	return;
+//local_freelist:
+//    if (current->nr_local_pages)
+//        goto back_local_freelist;
+//    if (in_interrupt())
+//        goto back_local_freelist;
+//
+//    list_add(&page->list, &current->local_pages);
+//    page->index = order;
+//    current->nr_local_pages++;
+}
+
+void __free_pages(struct page *page, unsigned long order)
+{
+	if(!PageReserved(page) && put_page_testzero(page))
+		__free_pages_ok(page, order);
+}
+
+void free_pages(unsigned long addr, unsigned long order)
+{
+	struct page *fpage;
+
+	fpage = virt_to_page(addr);
+	if (VALID_PAGE(fpage))
+		__free_pages(fpage, order);
+}
+
+/*
+ * Total amount of free (allocatable) RAM:
+ */
+unsigned int nr_free_pages (void)
+{
+	unsigned int sum;
+	zone_t *zone;
+	pg_data_t *pgdat = pgdat_list;
+
+	sum = 0;
+	while (pgdat) {
+		for (zone = pgdat->node_zones; zone < pgdat->node_zones + MAX_NR_ZONES; zone++)
+			sum += zone->free_pages;
+		pgdat = pgdat->node_next;
+	}
+	return sum;
+}
+
+#define MARK_USED(index, order, area) \
+	change_bit((index) >> (1+(order)), (area)->map)
+/*
+ zone 分配的管理区
+ page 待分割块的页面
+ index 页面在mem_map当中的索引
+ low 需要分配的页面阶
+ high 分配时要分割的页面阶
+ area 代表高阶页面块的free_area_t
+ */
+static inline struct page * expand (zone_t *zone, struct page *page,
+	 unsigned long index, int low, int high, free_area_t * area)
+{
+	unsigned long size = 1 << high;
+
+	while (high > low) {
+		if (BAD_RANGE(zone,page))
+			BUG();
+		area--;
+		high--;
+		size >>= 1;
+		memlist_add_head(&(page)->list, &(area)->free_list);
+		MARK_USED(index, high, area);
+		index += size;
+		page += size;
+	}
+	if (BAD_RANGE(zone,page))
+		BUG();
+	return page;
+}
+
+// static FASTCALL(struct page * rmqueue(zone_t *zone, unsigned long order));
+/* 负责找到一块足够大的用于分配的内存块 */
+static struct page * rmqueue(zone_t *zone, unsigned int order)
+{
+    free_area_t * area = zone->free_area + order;
+    unsigned int curr_order = order;
+    struct list_head *head, *curr;
+    unsigned long flags;
+    struct page *page;
+
+    spin_lock_irqsave(&zone->lock, flags);
+    do {
+        head = &area->free_list;
+        curr = head->next;
+
+        if (curr != head) {
+            unsigned int index;
+
+            page = list_entry(curr, struct page, list);
+            if (BAD_RANGE(zone,page))
+                BUG();
+            list_del(curr);
+            index = page - zone->zone_mem_map;
+            if (curr_order != MAX_ORDER-1)
+                MARK_USED(index, curr_order, area);
+            zone->free_pages -= 1UL << order;
+
+			// 将页面块分割成更高阶
+            page = expand(zone, page, index, order, curr_order, area);
+            spin_unlock_irqrestore(&zone->lock, flags);
+
+            set_page_count(page, 1);
+            if (BAD_RANGE(zone,page))
+                BUG();
+            // if (PageLRU(page))
+            // 	BUG();
+            // if (PageActive(page))
+            //     BUG();
+            return page;
+        }
+        curr_order++;
+        area++;
+    } while (curr_order < MAX_ORDER);
+    spin_unlock_irqrestore(&zone->lock, flags);
+
+    return NULL;
+}
+
+/* 伙伴系统分配器的核心 */
+struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, zonelist_t *zonelist)
+{
+	unsigned long min;
+	zone_t **zone, *classzone;
+	struct page *page;
+
+	zone = zonelist->zones;
+	classzone = *zone;    // 将合适的管理区标记为 classzone
+	if(classzone == NULL)
+		return NULL;
+	
+	// 遍历所有管理区，看是否有满足不超过极值的分配器
+	min = 1UL << order;   // 最小的内存
+	for(;;){
+		zone_t *z = *(zone++);
+		if(!z)   // 最后一个管理区，退出
+			break;
+		min += z->pages_low;   // 将极值分配器的页面数加一，使得减少只使用一个回退管理区的概率
+		if(z->free_pages > min){   // 不超过 pages_min 极值
+			page = rmqueue(z, order);    // 从管理区当中重新移动该页面块
+			if(page)  // 分配完成
+				return page;
+		}
+	}
+
+	return NULL;
+	/* 页面换入换出的平衡 */
+// 	classzone->need_balance = 1;   // 将管理区标记为需要平衡，后续由 kswapd 进行使用
+// 	mb();             // 内存屏障，保证所有CPU都能看到
+// 	if (waitqueue_active(&kswapd_wait))   // kswapd 处于睡眠状态，则唤醒它
+// 		wake_up_interruptible(&kswapd_wait);
+
+// 	zone = zonelist->zones;      
+// 	min = 1UL << order;
+// 	for (;;) {
+// 		unsigned long local_min;
+// 		zone_t *z = *(zone++);
+// 		if (!z)
+// 			break;
+
+// 		local_min = z->pages_min;
+// 		if (!(gfp_mask & __GFP_WAIT))
+// 			local_min >>= 2;
+// 		min += local_min;
+// 		if (z->free_pages > min) {
+// 			page = rmqueue(z, order);
+// 			if (page)
+// 				return page;
+// 		}
+// 	}
+
+// 	/* here we're in the low on memory slow path */
+
+// rebalance:
+// 	if (current->flags & (PF_MEMALLOC | PF_MEMDIE)) {
+// 		zone = zonelist->zones;
+// 		for (;;) {
+// 			zone_t *z = *(zone++);
+// 			if (!z)
+// 				break;
+
+// 			page = rmqueue(z, order);
+// 			if (page)
+// 				return page;
+// 		}
+// 		return NULL;
+// 	}
+
+// 	/* Atomic allocations - we can't balance anything */
+// 	if (!(gfp_mask & __GFP_WAIT))
+// 		return NULL;
+
+// 	page = balance_classzone(classzone, gfp_mask, order, &freed);
+// 	if (page)
+// 		return page;
+
+// 	zone = zonelist->zones;
+// 	min = 1UL << order;
+// 	for (;;) {
+// 		zone_t *z = *(zone++);
+// 		if (!z)
+// 			break;
+
+// 		min += z->pages_min;
+// 		if (z->free_pages > min) {
+// 			page = rmqueue(z, order);
+// 			if (page)
+// 				return page;
+// 		}
+// 	}
+
+// 	/* Don't let big-order allocations loop */
+// 	if (order > 3)
+// 		return NULL;
+
+// 	/* Yield for kswapd, and try again */
+// 	yield();
+// 	goto rebalance;
+}
+
+
+struct page *_alloc_pages(unsigned int gfp_mask, unsigned int order)
+{
+	return __alloc_pages(gfp_mask, order,
+                         contig_page_data.node_zonelists+(gfp_mask & GFP_ZONEMASK));
 }

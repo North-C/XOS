@@ -9,9 +9,10 @@
 #include <linux/kernel.h>
 #include <asm-i386/cpufeature.h>
 #include <linux/debug.h>
+#include <linux/mm.h>
 
 unsigned long max_pfn;
-unsigned long max_low_pfn;
+unsigned long max_low_pfn;   // 从mem_map处高端内存开始的PFN
 unsigned long min_low_pfn;
 extern pg_data_t contig_page_data;
 
@@ -44,6 +45,7 @@ static unsigned long init_bootmem_core(pg_data_t *pgdat, unsigned long mapstart,
 {
     bootmem_data_t *bdata = pgdat->bdata;           
     unsigned long mapsize = ((end - start)+7)/8;        // 以字节为单位计算
+    printk("original mapsize = %lu\n", mapsize);
 
     // 将当前节点插入到内存节点链表的第一个
     pgdat->node_next = pgdat_list;     
@@ -51,8 +53,9 @@ static unsigned long init_bootmem_core(pg_data_t *pgdat, unsigned long mapstart,
 
     // 设置 引导内存数据结构
     mapsize = (mapsize + (sizeof(long) - 1UL)) & ~(sizeof(long) - 1UL);  
+    printk("now mapsize = %lu\n", mapsize);
     bdata->node_bootmem_map = phys_to_virt(mapstart << PAGE_SHIFT);
-    bdata->node_boot_start = (start << PAGE_SHIFT);     
+    bdata->node_boot_start = (start << PAGE_SHIFT);   // 节点物理内存起始地址  
     bdata->node_low_pfn = end;
 
     memset(bdata->node_bootmem_map, 0xff, mapsize);  // 初始化位图
@@ -262,17 +265,17 @@ found:
 		}
 		bdata->last_offset &= ~PAGE_MASK;
         // debug
-        printk("merge\n");
+        // printk("merge\n");
 	} else {
 		bdata->last_pos = start + areasize - 1;
 		bdata->last_offset = size & ~PAGE_MASK;
 		ret = phys_to_virt(start * PAGE_SIZE + bdata->node_boot_start);
         // debug
-        printk("node_boot_start: %x, unmerge\n", bdata->node_boot_start);
-        printk("start: %x\n", start);
-        printk("areasize: %lu\n", areasize);
-        printk("ret phys: %x\n", start * PAGE_SIZE + bdata->node_boot_start);
-        printk("ret virt: %x\n", ret);
+        // printk("node_boot_start: %x, unmerge\n", bdata->node_boot_start);
+        // printk("start: %x\n", start);
+        // printk("areasize: %lu\n", areasize);
+        // printk("ret phys: %x\n", start * PAGE_SIZE + bdata->node_boot_start);
+        // printk("ret virt: %x\n", ret);
 	}
 
     // 正式分配内存，将位图中分配页设置为1
@@ -280,6 +283,56 @@ found:
         if(test_and_set_bit(i, bdata->node_bootmem_map)) // 避免重复分配
             BUG();
     memset(ret, 0, size);  // 内存清零
-    printk("after memset ret virt: %x\n", ret);
+    // printk("after memset ret virt: %x\n", ret);
     return ret;
+}
+
+/* 销毁引导内存分配器 */
+static unsigned long free_all_bootmem_core(pg_data_t *pgdat)
+{
+	struct page *page = pgdat->node_mem_map;
+	bootmem_data_t *bdata = pgdat->bdata;
+	unsigned long i, count, total = 0;
+	unsigned long idx;
+
+	if (!bdata->node_bootmem_map) BUG();
+
+	count = 0;
+    // 节点最大的可寻址索引
+	idx = bdata->node_low_pfn - (bdata->node_boot_start >> PAGE_SHIFT) - 1;
+    // TODO: 循环到 i =9 时，直接从test_bit跳出循环，程序执行结束
+	for (i = 0; i < idx; i++, page++) {  
+        printk("release %d page\n", i);
+		// 位图当中比特位为1时，表示这个页已经分配，为0时，表示当前指示的页是空闲的
+        // 该node_bootmem_map只分配到第13个字节末尾
+        if (!test_bit(i, bdata->node_bootmem_map)) {  // 对于未分配页面
+			count++;
+			ClearPageReserved(page);    // 清楚页面中的 PG_reserved 标志
+			set_page_count(page, 1);    // 设置计数为1
+			__free_page(page);         // 伙伴分配器将其加入到空闲链表中
+		}
+	}
+	total += count;    // 该函数释放的页面总数，或者加入到空闲链表的页面总数
+
+	/*
+	 * Now free the allocator bitmap itself, it's not
+	 * needed anymore:
+	 */
+	page = virt_to_page(bdata->node_bootmem_map);
+	count = 0;
+	for (i = 0; i < ((bdata->node_low_pfn-(bdata->node_boot_start >> PAGE_SHIFT))/8 + PAGE_SIZE-1)/PAGE_SIZE; i++,page++) {
+		count++;
+		ClearPageReserved(page);
+		set_page_count(page, 1);
+		__free_page(page);
+	}
+	total += count;
+	bdata->node_bootmem_map = NULL;
+
+	return total;
+}
+
+unsigned long free_all_bootmem (void)
+{
+	return(free_all_bootmem_core(&contig_page_data));
 }
