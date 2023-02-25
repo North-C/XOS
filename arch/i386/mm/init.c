@@ -17,6 +17,7 @@
 #include <asm-i386/e820.h>
 #include <linux/mm.h>
 #include <linux/stdio.h>
+#include <linux/string.h>
 
 unsigned long highstart_pfn, highend_pfn;
 static unsigned long totalram_pages;
@@ -53,7 +54,7 @@ void paging_init(void)
     // 刷新cr3，重新加载页表的映射
     load_cr3(swapper_pg_dir);
     // 刷新TLB缓存
-    __flush_tlb();          // BUG: 刷新TLB之后则崩溃
+    __flush_tlb_all();          // BUG: 刷新TLB之后则崩溃
     printk("starting zone_sizes_init...\n");
     // 管理区的初始化设置
     zone_sizes_init();
@@ -111,7 +112,7 @@ static void pagetable_init(void)
             // 设置 pmd 
             set_pmd(pmd, __pmd(_KERNPG_TABLE + __pa(pte_base)));
             
-            printk("pte_offset = %x\n", pte_offset(pmd, 0));
+            // printk("pte_offset = %x\n", pte_offset(pmd, 0));
             // BUG: 在pmd: 0xc0116c18, pte_base: 0xc000e000 时出现BUG，没有对齐
             // 当整体内存设置为 512MB 时，不会出现错误，而在 896MB 时会出现如上错误
             if(pte_base != pte_offset(pmd, 0)){ // 保证页表项有效
@@ -203,6 +204,8 @@ static inline int page_is_ram (unsigned long pagenr)
 }
 
 extern char _text, _etext, _edata, _end, _start;
+extern unsigned long empty_zero_page[1024];
+extern unsigned long num_mappedpages;
 
 void mem_init(void)
 {
@@ -212,11 +215,14 @@ void mem_init(void)
 	if (!mem_map)
 		BUG();
     
-    max_mapnr = num_physpages = max_low_pfn;
+    max_mapnr = num_mappedpages = num_physpages = max_low_pfn;
     high_memory = (void *) __va(max_low_pfn * PAGE_SIZE);
 
+    /* clear the zero-page */
+	memset(empty_zero_page, 0, PAGE_SIZE);
+
     /* this will put all low memory onto the freelists */
-	totalram_pages += free_all_bootmem();   // TODO: 进入释放后出现问题
+	totalram_pages += free_all_bootmem();
     printk("%s: %d: totalram_pages = %d\n", __func__, __LINE__, totalram_pages);
     
 	reservedpages = 0;
@@ -231,9 +237,9 @@ void mem_init(void)
 	// datasize =  (unsigned long) &_edata - (unsigned long) &_etext;
 	// initsize =  (unsigned long) &__init_end - (unsigned long) &__init_begin;
 
-	printk("Memory: %luk/%luk available\n",
-		(unsigned long) nr_free_pages() << (PAGE_SHIFT-10),
-		max_mapnr << (PAGE_SHIFT-10));
+	// printk("Memory: %luk/%luk available\n",
+	// 	(unsigned long) nr_free_pages() << (PAGE_SHIFT-10),
+	// 	max_mapnr << (PAGE_SHIFT-10));
     
     printk("kernel in memory start: 0x%08X\n", &_start);
     printk("kernel in memory end:   0x%08X\n", &_end - 0xc0000000);

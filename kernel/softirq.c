@@ -1,5 +1,6 @@
 #include <linux/interrupt.h>
 #include <linux/types.h>
+// #include<linux/irq_cpustat.h>
 #include <asm-i386/smp.h>
 #include <asm-i386/hardirq.h>
 #include <linux/cache.h>
@@ -68,49 +69,46 @@ void __tasklet_hi_schedule(struct tasklet_struct *t)
 void do_softirq()
 {
     int cpu = smp_processor_id();
-	__u32 pending;
-	unsigned long flags;
-	__u32 mask;
+	__u32 active, mask;
 
     // 软中断服务程序不允许在 硬中断服务程序内部执行，也不允许在软中断服务程序内部执行
     if(in_interrupt())    // 是否处于中断上下文当中
         return;
+	
+	local_bh_disable();   // 利用 barrier 提供多cpu间的串行化
 
-    local_irq_save(flags);   // 获取 EFLAGS 标志位到 flags 当中
+	local_irq_disable();
+	mask = softirq_mask(cpu);
+	active = softirq_active(cpu) & mask;
 
-    pending = softirq_pending(cpu);
-
-    if(pending){
+    if(active){
         struct softirq_action *h;
 
-        mask = ~pending;
-        local_bh_disable();       // 使用 barrier 提供串行化
-
 restart:
-        softirq_pending(cpu) = 0;       //  重置 cpu 的软中断请求标志位
+		/* Reset active bitmask before enabling irqs */
+		softirq_active(cpu) &= ~active;
 
         local_irq_enable();
 
         h = softirq_vec;
-
+		mask &= ~active;
+		
         do{
-            if(pending & 1)
+            if(active & 1)
                 h->action(h);    // 调用请求
             h++;
-            pending >>= 1;
-        }while(pending);
+            active >>= 1;
+        }while(active);
 
         local_irq_disable();
 
-        pending = softirq_pending(cpu);
-		if (pending & mask) {
-			mask &= ~pending;
+        active = softirq_active(cpu);
+		if (active & mask) {
 			goto restart;
 		}
-		__local_bh_enable();
 	}
-
-	local_irq_restore(flags);
+	__local_bh_enable();
+	return;
 }
 
 /** 老式的 bh */

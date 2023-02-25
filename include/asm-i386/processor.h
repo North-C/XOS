@@ -2,8 +2,7 @@
 #define _ASM_I386_PROCESSOR_H
 
 #include <asm-i386/types.h>
-
-#define SMP_CACHE_BYTES (1 << 4)		// 暂时先定义在这里，后续调整到cache.h中
+#include <linux/cache.h>
 #define NCAPINTS 4
 
 // CPU 的类型，硬件的标志位

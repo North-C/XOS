@@ -18,8 +18,10 @@ unsigned long simple_strtoul(const char* cp, char **endp, unsigned int base);
 int printf(const char* format, ...);
 int sprintf(char *buf, const char* format, ...);
 int snprintf(char * buf, size_t size, const char *fmt, ...);
-int vsprintf(char *str, const char* format, va_list ap);
+//int vsprintf(char *str, const char* format, va_list ap);
+int vsprintf(char *buf, const char *fmt, va_list args);
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list args);
-int printk(const char *fmt, ...);
+// int printk(const char *fmt, ...);
+void printk(const char *fmt, ...);
 
 #endif

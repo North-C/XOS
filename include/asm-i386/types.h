@@ -1,6 +1,7 @@
 #ifndef _I386_TYPES_H
 #define _I386_TYPES_H
 
+#include <asm-i386/posix_types.h>
 /* 1. _xx 不会影响POSIX 的命名空间，在导出到用户空间的头文件中使用 
     2. 与传统的旧的编译器兼容， -traditional */
 typedef __signed__ char __s8;
@@ -40,5 +41,9 @@ typedef unsigned long long  uint64_t;
 #define PG_SIZE 4096
 
 #define BITS_PER_LONG 32
+
+typedef __kernel_pid_t		pid_t;
+typedef __kernel_uid32_t	uid_t;
+typedef __kernel_gid32_t	gid_t;
 
 #endif

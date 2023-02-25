@@ -6,15 +6,27 @@
 #include <linux/string.h>
 #include <linux/kernel.h>
 #include <linux/threads.h>
+#include <linux/sched.h>
+#include <asm-i386/current.h>
 #include <asm-i386/page.h>
 #include <asm-i386/bitops.h>
 #include <asm-i386/pgtable.h>
 
+// /*
+//  * Temporary debugging check.
+//  */
+// #define BAD_RANGE(zone,x) (((zone) != (x)->zone) || (((x)-mem_map) < (zone)->offset) || (((x)-mem_map) >= (zone)->offset+(zone)->size))
 
 /*
  * Temporary debugging check.
  */
-#define BAD_RANGE(zone,x) (((zone) != (x)->zone) || (((x)-mem_map) < (zone)->offset) || (((x)-mem_map) >= (zone)->offset+(zone)->size))
+#define BAD_RANGE(zone, page)										\
+(																	\
+	(((page) - mem_map) >= ((zone)->zone_start_mapnr+(zone)->size))	\
+	|| (((page) - mem_map) < (zone)->zone_start_mapnr)				\
+	|| ((zone) != page_zone(page))									\
+)
+
 
 // 全局的内存节点链表
 pg_data_t *pgdat_list;      
@@ -82,7 +94,7 @@ void free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 		totalpages += size;
 	}
 	realtotalpages = totalpages;
-	if (zholes_size)    // 计算实际内存页面数
+	if (zholes_size)    // 计算实际内存页面数，减去空洞的页面数
 		for (i = 0; i < MAX_NR_ZONES; i++)
 			realtotalpages -= zholes_size[i];
 			
@@ -91,7 +103,6 @@ void free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 	// 分配局部lmem_map，设置gmap位，在UMA当中，gmap就是mem_map
 	map_size = (totalpages + 1) * sizeof(struct page);
 	if (lmem_map == (struct page *)0) {
-		printk("pgdat: %x\n", pgdat);
 		lmem_map = (struct page *) alloc_bootmem_node(pgdat, map_size);
 		lmem_map = (struct page *)(PAGE_OFFSET + 
 			MAP_ALIGN((unsigned long)lmem_map - PAGE_OFFSET));
@@ -103,7 +114,6 @@ void free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 	pgdat->nr_zones = 0;
 
 	offset = lmem_map - mem_map;	
-    
     /* 遍历管理区，初始化节点中的每个 zone */
 	for (j = 0; j < MAX_NR_ZONES; j++) {
 		zone_t *zone = pgdat->node_zones + j;
@@ -152,13 +162,15 @@ void free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 		zone->pages_low = mask*2;
 		zone->pages_high = mask*3;
 
-		zone->zone_mem_map = mem_map + offset;  // 第一个 page 的位置
+		zone->zone_mem_map = mem_map + offset;  // 第一个 page 的位置在mem_map当中的位置
 		zone->zone_start_mapnr = offset;     // mem_map 中管理区起点的索引
 		zone->zone_start_paddr = zone_start_paddr;   // zone 的起始物理区地址
 		
 		// 保证页面对齐，否则后续 slab 的位级操作就会失效
-		if ((zone_start_paddr >> PAGE_SHIFT) & (zone_required_alignment-1))
+		if ((zone_start_paddr >> PAGE_SHIFT) & (zone_required_alignment-1)){
 			printk("BUG: wrong zone alignment, it will crash\n");
+			BUG();
+		}
 
 		/*
 		将所有的页面都设置为 reserved，
@@ -174,7 +186,7 @@ void free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 			set_page_count(page, 0);
 			// 将 page 设置为 reserved，页面无法被换出
 			SetPageReserved(page);
-			INIT_LIST_HEAD(&page->list);   // 初始化头结点
+			INIT_LIST_HEAD(&page->list);   // 初始化页表链表头结点
 			if (j != ZONE_HIGHMEM)
 				set_page_address(page, __va(zone_start_paddr));
 			zone_start_paddr += PAGE_SIZE;
@@ -295,23 +307,18 @@ static inline unsigned long wait_table_bits(unsigned long size)
 	return ffz(~size);
 }
 
-// static void FASTCALL(__free_pages_ok (struct page *page, unsigned long order));
-static void __free_pages_ok (struct page *page, unsigned long order)
+static void __free_pages_ok(struct page *page, unsigned int order)
 {
 	unsigned long index, page_idx, mask, flags;
 	free_area_t *area;
 	struct page *base;
 	zone_t *zone;
 
-    /*
-     * Yes, think what happens when other parts of the kernel take
-     * a reference to a page in order to pin it for io. -ben
-     */
-//    if (PageLRU(page)) {
-//        if (unlikely(in_interrupt()))
-//            BUG();
-//        lru_cache_del(page);
-//    }
+	// if (PageLRU(page)) {
+	// 	if (unlikely(in_interrupt()))
+	// 		BUG();
+	// 	lru_cache_del(page);
+	// }
 
 	// if (page->buffers)
 	// 	BUG();
@@ -319,38 +326,32 @@ static void __free_pages_ok (struct page *page, unsigned long order)
 	// 	BUG();
 	if (!VALID_PAGE(page))
 		BUG();
-	// if (PageSwapCache(page))
-	// 	BUG();
 	// if (PageLocked(page))
-	// 	BUG();
-	// if (PageDecrAfter(page))
 	// 	BUG();
 	// if (PageActive(page))
 	// 	BUG();
-	// if (PageInactiveDirty(page))
-	// 	BUG();
-	// if (PageInactiveClean(page))
-	// 	BUG();
-
 	page->flags &= ~((1<<PG_referenced) | (1<<PG_dirty));
-	// page->age = PAGE_AGE_START;
-	
-	zone = page_zone(page);
 
-	mask = (~0UL) << order;
-	base = mem_map + zone->offset;
-	page_idx = page - base;
+	// if (current->flags & PF_FREE_PAGES)
+	// 	goto local_freelist;
+back_local_freelist:
+
+	zone = page_zone(page);
+	
+	mask = (~0UL) << order;   // 获取一个后order个位为0的长整型数字
+	base = zone->zone_mem_map;   // 获取内存管理区管理的开始内存页
+	page_idx = page - base;   // 当前页面在内存管理区的索引
 	if (page_idx & ~mask)
 		BUG();
-	index = page_idx >> (1 + order);
+	index = page_idx >> (1 + order);   // 伙伴标记位索引
 
-	area = zone->free_area + order;
+	area = zone->free_area + order;   // 内存块所在的空闲链表
 
 	spin_lock_irqsave(&zone->lock, flags);
 
-	zone->free_pages -= mask;
+	zone->free_pages -= mask;   // 添加释放的内存块所占用的内存页数
 
-	while (mask + (1 << (MAX_ORDER-1))) {
+	while (mask + (1 << (MAX_ORDER-1))) {   // 遍历(MAX_ORDER-order-1, MAX_ORDER等于10)次, 也就是说最多循环9次
 		struct page *buddy1, *buddy2;
 
 		if (area >= zone->free_area + MAX_ORDER)
@@ -362,6 +363,8 @@ static void __free_pages_ok (struct page *page, unsigned long order)
 			break;
 		/*
 		 * Move the buddy up one level.
+		 * This code is taking advantage of the identity:
+		 * 	-mask = 1+~mask
 		 */
 		buddy1 = base + (page_idx ^ -mask);
 		buddy2 = base + page_idx;
@@ -370,31 +373,36 @@ static void __free_pages_ok (struct page *page, unsigned long order)
 		if (BAD_RANGE(zone,buddy2))
 			BUG();
 
-		memlist_del(&buddy1->list);
+		list_del(&buddy1->list);
 		mask <<= 1;
 		area++;
 		index >>= 1;
 		page_idx &= mask;
 	}
-	memlist_add_head(&(base + page_idx)->list, &area->free_list);
+	list_add(&(base + page_idx)->list, &area->free_list);
 
 	spin_unlock_irqrestore(&zone->lock, flags);
 	return;
-//local_freelist:
-//    if (current->nr_local_pages)
-//        goto back_local_freelist;
-//    if (in_interrupt())
-//        goto back_local_freelist;
-//
-//    list_add(&page->list, &current->local_pages);
-//    page->index = order;
-//    current->nr_local_pages++;
+
+// local_freelist:
+// 	if (current->nr_local_pages)
+// 		goto back_local_freelist;
+// 	if (in_interrupt())
+// 		goto back_local_freelist;		
+
+// 	list_add(&page->list, &current->local_pages);
+// 	page->index = order;
+// 	current->nr_local_pages++;
+	return;
 }
 
 void __free_pages(struct page *page, unsigned long order)
 {
-	if(!PageReserved(page) && put_page_testzero(page))
+	if(!PageReserved(page) && put_page_testzero(page)){
+		// printk("start free pages\n");
 		__free_pages_ok(page, order);
+		// printk("free pages ok\n");
+	}
 }
 
 void free_pages(unsigned long addr, unsigned long order)
@@ -445,8 +453,8 @@ static inline struct page * expand (zone_t *zone, struct page *page,
 		area--;
 		high--;
 		size >>= 1;
-		memlist_add_head(&(page)->list, &(area)->free_list);
-		MARK_USED(index, high, area);
+		memlist_add_head(&(page)->list, &(area)->free_list);  // 空闲的另一半加入下一个阶次的空闲列表
+		MARK_USED(index, high, area);  // 已占用
 		index += size;
 		page += size;
 	}
@@ -459,7 +467,7 @@ static inline struct page * expand (zone_t *zone, struct page *page,
 /* 负责找到一块足够大的用于分配的内存块 */
 static struct page * rmqueue(zone_t *zone, unsigned int order)
 {
-    free_area_t * area = zone->free_area + order;
+    free_area_t * area = zone->free_area + order;  // 空闲区域
     unsigned int curr_order = order;
     struct list_head *head, *curr;
     unsigned long flags;
@@ -472,17 +480,17 @@ static struct page * rmqueue(zone_t *zone, unsigned int order)
 
         if (curr != head) {
             unsigned int index;
-
+			// 内存块
             page = list_entry(curr, struct page, list);
             if (BAD_RANGE(zone,page))
                 BUG();
             list_del(curr);
-            index = page - zone->zone_mem_map;
+            index = page - zone->zone_mem_map;  // page在管理区中的索引
             if (curr_order != MAX_ORDER-1)
                 MARK_USED(index, curr_order, area);
-            zone->free_pages -= 1UL << order;
+            zone->free_pages -= 1UL << order;  // 除去内存块所占用的内存页数
 
-			// 将页面块分割成更高阶
+			// 将页面块分割成更高阶，大页面分裂为小页面
             page = expand(zone, page, index, order, curr_order, area);
             spin_unlock_irqrestore(&zone->lock, flags);
 
@@ -506,6 +514,7 @@ static struct page * rmqueue(zone_t *zone, unsigned int order)
 /* 伙伴系统分配器的核心 */
 struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, zonelist_t *zonelist)
 {
+	// printk("%s: %d: zonelist = 0x%p\n", __func__, __LINE__, zonelist);
 	unsigned long min;
 	zone_t **zone, *classzone;
 	struct page *page;
@@ -519,9 +528,14 @@ struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, zonelist_
 	min = 1UL << order;   // 最小的内存
 	for(;;){
 		zone_t *z = *(zone++);
+		
 		if(!z)   // 最后一个管理区，退出
 			break;
+		// printk("z = %p\n", z);
 		min += z->pages_low;   // 将极值分配器的页面数加一，使得减少只使用一个回退管理区的概率
+		
+		// printk("min = %d\n", min);
+		// printk("z->free_pages = %d\n", z->free_pages);
 		if(z->free_pages > min){   // 不超过 pages_min 极值
 			page = rmqueue(z, order);    // 从管理区当中重新移动该页面块
 			if(page)  // 分配完成
@@ -529,7 +543,6 @@ struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, zonelist_
 		}
 	}
 
-	return NULL;
 	/* 页面换入换出的平衡 */
 // 	classzone->need_balance = 1;   // 将管理区标记为需要平衡，后续由 kswapd 进行使用
 // 	mb();             // 内存屏障，保证所有CPU都能看到
@@ -595,13 +608,13 @@ struct page * __alloc_pages(unsigned int gfp_mask, unsigned int order, zonelist_
 // 		}
 // 	}
 
-// 	/* Don't let big-order allocations loop */
-// 	if (order > 3)
-// 		return NULL;
+	/* Don't let big-order allocations loop */
+	// if (order > 3)
+	// 	return NULL;
 
-// 	/* Yield for kswapd, and try again */
-// 	yield();
-// 	goto rebalance;
+	// /* Yield for kswapd, and try again */
+	// // yield();
+	// goto rebalance;
 }
 
 

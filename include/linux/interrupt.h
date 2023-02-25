@@ -7,6 +7,7 @@
 #include <linux/cache.h>
 #include <asm-i386/bitops.h>
 #include <linux/kernel.h>
+#include <linux/irq_cpustat.h>
 
 struct irqaction{
     void (*handler)(int, void *, struct pt_regs *);
@@ -69,7 +70,10 @@ struct tasklet_head
 } __attribute__ ((__aligned__(SMP_CACHE_BYTES)));
 
 
-#define __cpu_raise_softirq(cpu, nr) do { softirq_pending(cpu) |= 1UL << (nr); } while (0)
+static inline void __cpu_raise_softirq(int cpu, int nr)
+{
+	softirq_active(cpu) |= (1<<nr);
+}
 
 asmlinkage void do_softirq(void);
 

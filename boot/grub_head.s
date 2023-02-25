@@ -43,7 +43,7 @@ dd MBOOT_HEADER_FLAGS   ; GRUB 的一些加载时选项，其详细注释在定�
 dd MBOOT_CHECKSUM       ; 检测数值，其含义在定义处
 
 [GLOBAL start] 			; 内核代码入口，此处提供该声明给 ld 链接器
-; [GLOBAL global_multiboot_info] 全局的 struct multiboot * 变量
+;[GLOBAL global_multiboot_info] 全局的 struct multiboot * 变量
 [EXTERN global_multiboot_info]
 [GLOBAL flush]
 extern kern_entry		; 声明内核 C 代码的入口函数
@@ -52,7 +52,8 @@ start:
     mov [global_multiboot_info], ebx	; 将 ebx 中存储的指针存入 global_multiboot_info 变量的地址, bootloader 向其中保存信息
     
 	mov esp, STACK_TOP  	; 设置内核栈地址，按照 multiboot 规范，当需要使用堆栈时，OS 映象必须自己创建一个
-    mov ebp, 0 			; 帧指针修改为 0
+    and esp, 0FFFFFFF0H  ; 栈地址按照16字节对齐
+	mov ebp, 0 			; 帧指针修改为 0
 	
 	call kern_entry
 stop:
@@ -65,12 +66,12 @@ next:
     ret
 ;-----------------------------------------------------------------------------
 
-section .data.init  			 ; 未初始化的数据段从这里开始
+section .data.init 			 ; 未初始化的数据段从这里开始
 stack:
-	; resb 32768
-	resb 614400 
+	;resb 32768
+	resb 614400
 ;global_multiboot_info: 			 ; 全局的 multiboot 结构体指针
-	; resb 4
+	;resb 4
 
 STACK_TOP equ $-stack-1
 ;-----------------------------------------------------------------------------

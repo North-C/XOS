@@ -18,7 +18,7 @@ pte_t pte[1024] __attribute__((__section__(".data.init")));
 // 页目录表的位置
 #define PAGE_DIR_TABLE_POS 0x90000
 
-unsigned long empty_zero_page[1024];    // 启动时的临时内存孔家
+unsigned long empty_zero_page[1024];    // 启动时的临时内存
 
 /* 构建GDT */
 __init static struct gdt_desc make_gdt_desc(uint32_t *desc_addr, uint32_t limit, uint8_t attr_high, uint8_t attr_low)
@@ -116,7 +116,7 @@ static void __init page_create()
     *((struct gdt_desc *)0x918) = make_gdt_desc((uint32_t *)0xc00b8000, 0x00007, GDT_ATTR_HIGH, GDT_DATA_ATTR_LOW_DPL0);
 
     // 设置 gdtr的内容, 存放在c0000900
-    uint64_t gdt_operand = (((uint64_t)(uint32_t)0xc0000900 << 16) | (8 * 20 - 1));
+    uint64_t gdt_operand = (((uint64_t)(uint32_t)0xc0000900 << 16) | (8 * 6 - 1));
 
     // 设置cr3
     asm volatile("mov %0, %%cr3"

@@ -27,7 +27,8 @@ BUILD_COMMON_IRQ()
  */
 BUILD_16_IRQS(0x0)
 
-#define IRQ(x,y) IRQ##x##y##_interrupt     // ## 用于连接字符串，在 gcc 预处理之后替换为所需的文字,例如 IRQ0x00_interrupt
+#define IRQ(x,y) \
+	IRQ##x##y##_interrupt     // ## 用于连接字符串，在 gcc 预处理之后替换为所需的文字,例如 IRQ0x00_interrupt
 
 #define IRQLIST_16(x) \
 	IRQ(x,0), IRQ(x,1), IRQ(x,2), IRQ(x,3), \
@@ -209,7 +210,7 @@ void init_8259A(int auto_eoi)
 	else
 		i8259A_irq_type.ack = mask_and_ack_8259A;
 
-	udelay(100);		/* wait for 8259A to initialize */
+	// udelay(100);		/* wait for 8259A to initialize */
 
 	outb(cached_21, 0x21);	/* restore master IRQ mask */
 	outb(cached_A1, 0xA1);	/* restore slave IRQ mask */
@@ -225,9 +226,9 @@ void init_ISA_irqs(void)
     init_8259A(0);
     
     for(i = 0; i < NR_IRQS; i++) {
-        irq_desc[i].status = IRQ_DISABLED;
-        irq_desc[i].action = 0;
-        irq_desc[i].depth = 1;
+        irq_desc[i].status = IRQ_DISABLED;   // 中断处于禁用状态
+        irq_desc[i].action = 0;    // 终端服务数为0
+        irq_desc[i].depth = 1;    // 中断通道被禁用
 
         if(i < 16){     // 将开头的 16个中断向量的 处理程序指向 i8259A_irq_type
             irq_desc[i].handler = &i8259A_irq_type;
@@ -236,6 +237,8 @@ void init_ISA_irqs(void)
         }
     }
 }
+
+extern struct desc_struct idt_table[256] __attribute__((__section__(".data.idt")));
 
 void init_IRQ(void)
 {
@@ -255,6 +258,11 @@ void init_IRQ(void)
 		if (vector != SYSCALL_VECTOR) 
 			set_intr_gate(vector, interrupt[i]);
 	}
+
+	 /* 加载idt */
+    uint64_t idt_operand = ((sizeof(idt_table) - 1) | ((uint64_t)(uint32_t)idt_table << 16));
+    asm volatile("lidt %0" : : "m" (idt_operand));
+
     /*
 	 * 时钟速率设置：Set the clock to HZ Hz, we already have a valid
 	 * vector now:

@@ -33,9 +33,9 @@ typedef struct hw_interrupt_type  hw_irq_controller;
 // 中断向量描述符，包含了不同的中断信息。将其嵌入 32 bytes 的缓存当中
 typedef struct {
     unsigned int status;   // IRQ 状态
-    hw_irq_controller *handler;  // 
+    hw_irq_controller *handler;  //  对中断控制器的描述
     struct irqaction *action;    // IRQ 动作队列
-    unsigned int depth;         // 允许嵌入的深度
+    unsigned int depth;         // 允许嵌入的深度,如果启用这条 IRQ 中断线，depth 则为 0，如果禁用这条 IRQ 中断线不止一次，则为一个正数
     spinlock_t lock;
 } ____cacheline_aligned irq_desc_t;
 

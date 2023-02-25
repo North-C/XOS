@@ -13,7 +13,7 @@
 #define ADDR    (*(volatile long * ) addr)      
 
 /**
- * @brief 清除一个bit位，并返回其旧值，原子化操作
+ * @brief 清除一个bit位为0，并返回其旧值，原子化操作
  * 
  * @param nr 要清除的bit
  * @param addr 开始计算的地址  
@@ -82,10 +82,13 @@ static __inline__ int variable_test_bit(int nr, volatile void * addr)
 
 // 知晓位数组中一个给定的位是否被置位
 // __builtin_constant_p 是GCC扩展，可以判断是常量还是变量
-#define test_bit(nr, addr) \
-(__builtin_constant_p(nr) ? \
-constant_test_bit((nr), (addr)) : \
-variable_test_bit((nr), (addr)))
+// #define test_bit(nr, addr) \
+// (__builtin_constant_p(nr) ? \
+// constant_test_bit((nr), (addr)) : \
+// variable_test_bit((nr), (addr)))
+
+
+#define test_bit(nr,addr) constant_test_bit((nr),(addr))
 
 // 设置内存中的 bit 位
 static __inline__ void set_bit(int nr, volatile void * addr)

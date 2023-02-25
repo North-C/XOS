@@ -44,21 +44,21 @@ unsigned long init_bootmem(unsigned long start, unsigned long pages)
 static unsigned long init_bootmem_core(pg_data_t *pgdat, unsigned long mapstart, unsigned long start, unsigned long end)
 {
     bootmem_data_t *bdata = pgdat->bdata;           
-    unsigned long mapsize = ((end - start)+7)/8;        // 以字节为单位计算
-    printk("original mapsize = %lu\n", mapsize);
+    unsigned long mapsize = ((end - start + 1)+7)/8;        // 以字节为单位计算
 
     // 将当前节点插入到内存节点链表的第一个
     pgdat->node_next = pgdat_list;     
     pgdat_list = pgdat;
 
-    // 设置 引导内存数据结构
+    // 设置 引导内存数据结构，保证是4的倍数，进行对齐设置
     mapsize = (mapsize + (sizeof(long) - 1UL)) & ~(sizeof(long) - 1UL);  
-    printk("now mapsize = %lu\n", mapsize);
+    // 初始化，位置放在 min_low_pfn之后，即内核引导后的第一个页面
     bdata->node_bootmem_map = phys_to_virt(mapstart << PAGE_SHIFT);
+
     bdata->node_boot_start = (start << PAGE_SHIFT);   // 节点物理内存起始地址  
     bdata->node_low_pfn = end;
-
-    memset(bdata->node_bootmem_map, 0xff, mapsize);  // 初始化位图
+    // 以 0xff 字节为单位进行初始化
+    memset(bdata->node_bootmem_map, 0xff, mapsize);  // 初始化位图，全部设置为1
 
     return mapsize;
 }
@@ -92,7 +92,7 @@ static void free_bootmem_core(bootmem_data_t *bdata, unsigned long addr, unsigne
     // 将位图当中对应的页面位清除
     start = (addr + PAGE_SIZE-1) / PAGE_SIZE;
     sidx = start - (bdata->node_boot_start/PAGE_SIZE);
-    // 置位为1
+    // 置位为0
     for (i = sidx; i < eidx; i++){
         if(!test_and_clear_bit(i, bdata->node_bootmem_map)) // 已经释放，则提示错误
             BUG();
@@ -165,7 +165,7 @@ void * __alloc_bootmem_node (pg_data_t *pgdat, unsigned long size, unsigned long
 	panic("Out of memory");
 	return NULL;
 }
-// TODO: 内存分配时，在第 7 次分配时，返回错误的地址
+
 /**
  * @brief 分配内存
  * 
@@ -184,10 +184,10 @@ static void * __alloc_bootmem_core(bootmem_data_t *bdata, unsigned long size, un
     unsigned long eidx = bdata->node_low_pfn - (bdata->node_boot_start >> PAGE_SHIFT);   // 末尾位索引
     
     /* 保证参数的正确性 */
-    if(!size) BUG();
+    // if(!size) BUG();
 
-    if(align & (align-1))
-        BUG();
+    // if(align & (align-1))
+    //     BUG();
     
     offset = 0;  // 对齐的默认偏移是0
     // 如果指定了align对齐，且节点的对齐方式和请求的对齐方式
@@ -271,11 +271,11 @@ found:
 		bdata->last_offset = size & ~PAGE_MASK;
 		ret = phys_to_virt(start * PAGE_SIZE + bdata->node_boot_start);
         // debug
-        // printk("node_boot_start: %x, unmerge\n", bdata->node_boot_start);
-        // printk("start: %x\n", start);
+        // printk("node_boot_start: 0x%x, unmerge\n", bdata->node_boot_start);
+        // printk("start: 0x%x\n", start);
         // printk("areasize: %lu\n", areasize);
-        // printk("ret phys: %x\n", start * PAGE_SIZE + bdata->node_boot_start);
-        // printk("ret virt: %x\n", ret);
+        // printk("ret phys: 0x%x\n", start * PAGE_SIZE + bdata->node_boot_start);
+        // printk("ret virt: 0x%x\n", ret);
 	}
 
     // 正式分配内存，将位图中分配页设置为1
@@ -299,10 +299,10 @@ static unsigned long free_all_bootmem_core(pg_data_t *pgdat)
 
 	count = 0;
     // 节点最大的可寻址索引
-	idx = bdata->node_low_pfn - (bdata->node_boot_start >> PAGE_SHIFT) - 1;
-    // TODO: 循环到 i =9 时，直接从test_bit跳出循环，程序执行结束
+	idx = bdata->node_low_pfn - (bdata->node_boot_start >> PAGE_SHIFT);
+    // TODO: 循环到 i=4/5 时，直接从test_bit跳出循环，程序执行结束
 	for (i = 0; i < idx; i++, page++) {  
-        printk("release %d page\n", i);
+        // printk("release %d page\n", i);
 		// 位图当中比特位为1时，表示这个页已经分配，为0时，表示当前指示的页是空闲的
         // 该node_bootmem_map只分配到第13个字节末尾
         if (!test_bit(i, bdata->node_bootmem_map)) {  // 对于未分配页面
@@ -334,5 +334,5 @@ static unsigned long free_all_bootmem_core(pg_data_t *pgdat)
 
 unsigned long free_all_bootmem (void)
 {
-	return(free_all_bootmem_core(&contig_page_data));
+	return (free_all_bootmem_core(&contig_page_data));
 }

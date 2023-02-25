@@ -2,9 +2,11 @@
 #define __ASM_I386_HARDIRQ_H
 
 #include <linux/cache.h>
-
+#include <linux/irq_cpustat.h>
 typedef struct {
-    unsigned int __softirq_pending;   // 软中断请求
+    // unsigned int __softirq_pending;   // 软中断请求
+    unsigned int __softirq_active;
+	unsigned int __softirq_mask;
     unsigned int __local_irq_count;     // 硬中断
     unsigned int __local_bh_count;
     unsigned int __syscall_count;
@@ -12,7 +14,8 @@ typedef struct {
     unsigned int __nmi_count;
 }____cacheline_aligned irq_cpustat_t;
 
-#include <linux/irq_cpustat.h>
+extern irq_cpustat_t irq_stat[];
+
 
 #define in_interrupt() ({ int __cpu = smp_processor_id(); \
     (local_irq_count(__cpu) + local_bh_count(__cpu) != 0); })

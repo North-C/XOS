@@ -36,6 +36,7 @@ static struct resource * __request_resource(struct resource *root, struct resour
 	}
 }
 
+// 将给定的地址范围分配给 IO 设备
 int request_resource(struct resource *root, struct resource *new)
 {
 	struct resource *conflict;

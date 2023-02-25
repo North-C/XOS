@@ -172,7 +172,7 @@ void trap_init(void)
     set_trap_gate(18,common_temp18);
     set_trap_gate(19,common_temp19);
 
-//     set_system_gate(SYSCALL_VECTOR,&system_call);   // 系统调用向量的初始化
+    //set_system_gate(SYSCALL_VECTOR,&system_call);   // 系统调用向量的初始化
 
     /*
 	 * 兼容使用调用门的其他系统，default LDT is a single-entry callgate to lcall7 for iBCS

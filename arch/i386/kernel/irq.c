@@ -48,22 +48,22 @@ int setup_irq(unsigned int irq, struct irqaction * new)
 	struct irqaction *old, **p;
 	irq_desc_t *desc = irq_desc + irq;
 
-	/*
-	 * Some drivers like serial.c use request_irq() heavily,
-	 * so we have to be careful not to interfere with a
-	 * running system.
-	 */
-	if (new->flags & SA_SAMPLE_RANDOM) {  // SA_SAMPLE_RANDOM 设置为 1 即可
-		/*
-		 * This function might sleep, we want to call it first,
-		 * outside of the atomic block.
-		 * Yes, this might clear the entropy pool if the wrong
-		 * driver is attempted to be loaded, without actually
-		 * installing a new handler, but is this really a problem,
-		 * only the sysadmin is able to do this.
-		 */
-		// rand_initialize_irq(irq);   	// 伪随机数生成
-	}
+	// /*
+	//  * Some drivers like serial.c use request_irq() heavily,
+	//  * so we have to be careful not to interfere with a
+	//  * running system.
+	//  */
+	// if (new->flags & SA_SAMPLE_RANDOM) {  // SA_SAMPLE_RANDOM 设置为 1 即可
+	// 	/*
+	// 	 * This function might sleep, we want to call it first,
+	// 	 * outside of the atomic block.
+	// 	 * Yes, this might clear the entropy pool if the wrong
+	// 	 * driver is attempted to be loaded, without actually
+	// 	 * installing a new handler, but is this really a problem,
+	// 	 * only the sysadmin is able to do this.
+	// 	 */
+	// 	rand_initialize_irq(irq);   	// 伪随机数生成
+	// }
 
 	/*
 	 * The following block of code has to be executed atomically
@@ -159,16 +159,16 @@ int handle_IRQ_event(unsigned int irq, struct pt_regs * regs, struct irqaction *
 	int status;
 	int cpu = smp_processor_id();
 
-	irq_enter(cpu, irq);
+	irq_enter(cpu, irq);  // 增加中断计数
 
-	status = 1; 
+	status = 1;  /* 进行下半部分的处理 Force the "do bottom halves" bit */
 
 	if(!(action->flags & SA_INTERRUPT))
 		__sti();   // 开中断
 	
 	do{
 		status |= action->flags;
-		action->handler(irq, action->dev_id, regs);
+		action->handler(irq, action->dev_id, regs);  // 调用处理程序
 		action = action->next;
 	} while(action);
 
@@ -176,7 +176,7 @@ int handle_IRQ_event(unsigned int irq, struct pt_regs * regs, struct irqaction *
 	// 	add_interrupt_randomness(irq);
 	__cli();	  // 关中断
 
-	irq_exit(cpu, irq);
+	irq_exit(cpu, irq);   // 退出中断,减小中断计数
 
 	return status;
 }
@@ -191,16 +191,19 @@ asmlinkage unsigned int do_IRQ(struct pt_regs regs)
 {
 	printk("do_IRQ...\n");
 
-	int irq = regs.orig_eax & 0xff;
+	int irq = regs.orig_eax & 0xff;  // 获取中断请求号
+
 	int cpu = smp_processor_id();    // 专门为 SMP 结构设计，单处理器时只返回 0
-	irq_desc_t *desc = irq_desc + irq;
+
+	irq_desc_t *desc = irq_desc + irq;   // 找到中断描述符
 	struct irqaction * action;
 	unsigned int status;
 
-	kstat.irqs[cpu][irq]++;
+	kstat.irqs[cpu][irq]++;   // 设置系统内核的统计数据
 	spin_lock(&desc->lock); 	// 为多处理器考虑
 	desc->handler->ack(irq);    // 向 CPU 确认，表示正在处理
 
+	/* 中断处理通道的处理和设置 */
 	// REPLAY 是指当CPU开启该队列的服务时，看到这个标志位而补上一次中断服务。重新发送之前的中断请求
 	// WAITING 是 标记已经被检测到的 IRQ
 	status = desc->status & ~(IRQ_REPLAY | IRQ_WAITING);
@@ -220,7 +223,7 @@ asmlinkage unsigned int do_IRQ(struct pt_regs regs)
 	// 边缘触发的中断需要记住未决的事件，在do_IRQ 或者 handler 当中时，允许第二个中断到达，但仅处理第二个，其后的会被抛弃。
 	for(;;){
 		spin_unlock(&desc->lock);
-		handle_IRQ_event(irq, &regs, action);   // 具体的中断服务
+		handle_IRQ_event(irq, &regs, action);   // 具体的中断服务程序
 		spin_lock(&desc->lock);
 
 		if(!(desc->status & IRQ_PENDING))
@@ -233,8 +236,10 @@ out:
 	desc->handler->end(irq);   // 处理那些中断被禁用，但是其处理程序还在运行的情况
 	spin_unlock(&desc->lock);
 
-	if(softirq_pending(cpu))   // 检查是否有软中断在等待执行
+	// if(softirq_pending(cpu))   // 检查是否有软中断在等待执行
+	// 	do_softirq();
+
+	if (softirq_active(cpu) & softirq_mask(cpu))  // 检查是否有软中断在等待执行
 		do_softirq();
-	
 	return 1;
 }

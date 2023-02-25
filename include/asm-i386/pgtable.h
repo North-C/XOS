@@ -39,7 +39,17 @@ extern unsigned long mmu_cr4_features;
  * Permanent address of a page. Obviously must never be
  * called on a highmem page.
  */
+#if defined(CONFIG_HIGHMEM) || defined(WANT_PAGE_VIRTUAL)
+
 #define page_address(page) ((page)->virtual)
+
+#else /* CONFIG_HIGHMEM || WANT_PAGE_VIRTUAL */
+
+#define page_address(page)						\
+	__va( (((page) - page_zone(page)->zone_mem_map) << PAGE_SHIFT)	\
+			+ page_zone(page)->zone_start_paddr)
+#endif
+
 #define pages_to_mb(x) ((x) >> (20-PAGE_SHIFT))
 
 #define PGDIR_SIZE  (1UL << PGDIR_SHIFT)
@@ -58,15 +68,63 @@ extern unsigned long mmu_cr4_features;
 #define PMD_SIZE (1UL << PMD_SHIFT)
 #define PMD_MASK (~(PMD_SIZE-1))
 
-#define __flush_tlb() \
-    do{ \
-        unsigned int tmpreg;        \
-        __asm__ __volatile__(       \
-            "movl %%cr3, %0; # flush TLB\n"  \
-            "movl %0, %%cr3;            \n"     \
-            : "=r" (tmpreg)         \
-            ::   "memory");     \
-    }while(0)
+// #define __flush_tlb() \
+//     do{ \
+//         unsigned int tmpreg;        \
+//         __asm__ __volatile__(       \
+//             "movl %%cr3, %0; # flush TLB\n"  \
+//             "movl %0, %%cr3;            \n"     \
+//             : "=r" (tmpreg)         \
+//             ::   "memory");     \
+//     }while(0)
+
+
+#define __flush_tlb()							\
+	do {										\
+		unsigned int tmpreg;					\
+												\
+		__asm__ __volatile__(					\
+			"movl %%cr3, %0;  # flush TLB \n"	\
+			"movl %0, %%cr3;              \n"	\
+			: "=r" (tmpreg)						\
+			:: "memory");						\
+	} while (0)
+
+/*
+ * Global pages have to be flushed a bit differently. Not a real
+ * performance problem because this does not happen often.
+ */
+#define __flush_tlb_global()							\
+	do {												\
+		unsigned int tmpreg;							\
+														\
+		__asm__ __volatile__(							\
+			"movl %1, %%cr4;  # turn off PGE     \n"	\
+			"movl %%cr3, %0;  # flush TLB        \n"	\
+			"movl %0, %%cr3;                     \n"	\
+			"movl %2, %%cr4;  # turn PGE back on \n"	\
+			: "=&r" (tmpreg)							\
+			: "r" (mmu_cr4_features & ~X86_CR4_PGE),	\
+			  "r" (mmu_cr4_features)					\
+			: "memory");								\
+	} while (0)
+
+extern unsigned long pgkern_mask;
+
+/*
+ * Do not check the PGE bit unnecesserily if this is a PPro+ kernel.
+ */
+#ifdef CONFIG_X86_PGE
+# define __flush_tlb_all() __flush_tlb_global()
+#else
+# define __flush_tlb_all()						\
+	do {								\
+		if (cpu_has_pge)					\
+			__flush_tlb_global();				\
+		else							\
+			__flush_tlb();					\
+	} while (0)
+#endif
 
 // 物理页的地址
 #define mk_pte_phys(physpage, pgprot) __mk_pte((physpage) >> PAGE_SHIFT, pgprot)
@@ -78,14 +136,24 @@ extern unsigned long mmu_cr4_features;
 
 // 内核页表
 #define __PAGE_KERNEL (_PAGE_PRESENT | _PAGE_RW | _PAGE_DIRTY | _PAGE_ACCESSED)
+#define __PAGE_KERNEL_NOCACHE \
+	(_PAGE_PRESENT | _PAGE_RW | _PAGE_DIRTY | _PAGE_PCD | _PAGE_ACCESSED)
+#define __PAGE_KERNEL_RO \
+	(_PAGE_PRESENT | _PAGE_DIRTY | _PAGE_ACCESSED)
 
-#define MAKE_GLOBAL(x) 			\
+#ifdef CONFIG_X86_PGE
+# define MAKE_GLOBAL(x) __pgprot((x) | _PAGE_GLOBAL)
+#else
+# define MAKE_GLOBAL(x)						\
 	({							\
-		pgprot_t __ret;			\
-		__ret = __pgprot(x);	\
-		__ret;					\
-})
+		pgprot_t __ret;					\
+		__ret = __pgprot(x);			\
+		__ret;						\
+	})
+#endif
 
 #define PAGE_KERNEL MAKE_GLOBAL(__PAGE_KERNEL)
+#define PAGE_KERNEL_RO MAKE_GLOBAL(__PAGE_KERNEL_RO)
+#define PAGE_KERNEL_NOCACHE MAKE_GLOBAL(__PAGE_KERNEL_NOCACHE)
 
 #endif

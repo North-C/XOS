@@ -43,7 +43,7 @@ static inline void init_MUTEX_LOCKED (struct semaphore *sem)
 // TODO: 有待理解
 static inline void up(struct semaphore * sem)
 {
-	printk("up semaphore\n");
+	// printk("up semaphore\n");
 	// __asm__ __volatile__(
 	// 	"# atomic up operation\n\t"
 	// 	LOCK "incl %0\n\t"     /* ++sem->count */
@@ -60,7 +60,7 @@ static inline void up(struct semaphore * sem)
 
 static inline void down(struct semaphore * sem)
 {
-	printk("down semaphore\n");
+	// printk("down semaphore\n");
 	// __asm__ __volatile__(
 	// 	"# atomic down operation\n\t"
 	// 	LOCK "decl %0\n\t"     /* --sem->count */

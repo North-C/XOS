@@ -17,7 +17,7 @@ struct cpuinfo_x86 boot_cpu_data = { 0, 0, 0, 0, -1, 1, 0, 0, -1 };
 unsigned long mmu_cr4_features;
 
 // page frame 计算
-#define PFN_UP(x)   (((x) + PAGE_SHIFT-1) >> PAGE_SHIFT)  // 上一个页面边界
+#define PFN_UP(x)   (((x) + PAGE_SIZE-1) >> PAGE_SHIFT)  // 上一个页面边界
 #define PFN_DOWN(x) ((x) >> PAGE_SHIFT)             // 下一个页面边界
 #define PFN_PHYS(x) ((x) << PAGE_SHIFT)             // 页框的物理地址
 
@@ -288,7 +288,7 @@ static unsigned long setup_memory(void)
     // 分配位图本身的内存
     reserve_bootmem(HIGH_MEMORY, (PFN_PHYS(start_pfn) + bootmap_size + PAGE_SIZE-1) - (HIGH_MEMORY));
     
-    // 分配 物理页 0,用于很多BIOS功能的页面
+    // 将contig_page_data.bdata 位图置为1，即分配 物理页 0,主要用于很多BIOS功能
     reserve_bootmem(0, PAGE_SIZE);
     return max_low_pfn;
 }

@@ -38,11 +38,11 @@ typedef struct page {
     atomic_t count;             // 引用计数器
     unsigned long flags;       // 标志位，管理页框
     struct list_head lru;       // 页的最近最少使用双向链表的额指针
-    unsigned long age;          
+    //unsigned long age;          
     struct page **pprev_hash;   /* Complement to *next_hash. */
     // struct buffer_head * buffers;  /* Buffer maps us to a disk block. */
-    void *virtual;/* Kernel virtual address (NULL if not kmapped, ie. highmem) */
-    struct zone_struct *zone;
+    // void *virtual;/* Kernel virtual address (NULL if not kmapped, ie. highmem) */
+    // struct zone_struct *zone;   // 指向页面所属的管理区,后续版本取消了
 } mem_map_t;
 
 #define put_page_testzero(p)  atomic_dec_and_test(&(p)->count)
@@ -80,10 +80,26 @@ static inline void set_page_zone(struct page *page, unsigned long zone_num)
 }
 
 // 设置页面的虚拟地址
+// #define set_page_address(page, address)			\
+// 	do {						\
+// 		(page)->virtual = (address);		\
+// 	} while(0)
+/*
+ * In order to avoid #ifdefs within C code itself, we define
+ * set_page_address to a noop for non-highmem machines, where
+ * the field isn't useful.
+ * The same is true for page_address() in arch-dependent code.
+ */
+#if defined(CONFIG_HIGHMEM) || defined(WANT_PAGE_VIRTUAL)
+
 #define set_page_address(page, address)			\
 	do {						\
 		(page)->virtual = (address);		\
 	} while(0)
+
+#else /* CONFIG_HIGHMEM || WANT_PAGE_VIRTUAL */
+#define set_page_address(page, address)  do { } while(0)
+#endif /* CONFIG_HIGHMEM || WANT_PAGE_VIRTUAL */
 
 extern void __free_pages(struct page *page, unsigned long order);
 extern void free_pages(unsigned long addr, unsigned long order);
