@@ -1,4 +1,0 @@
-OBJS :=
-DIRS := i386
-
-include $(SUB_MAKE_INCLUDE)

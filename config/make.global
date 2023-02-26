@@ -5,16 +5,16 @@ BUILD_DIR = ${PROJECT_PATH}/build
 
 # compile macro
 ASM :=as
-CC := gcc
+CC := gcc-4.8
 LD :=ld
-LDFLAGS =-m elf_i386 -T ${PROJECT_PATH}/script/kernel.ld -Map ${PROJECT_PATH}/build/kernel.map -nostdlib
-LIB = -I${PROJECT_PATH}/include
+LDFLAGS = -m32 -m elf_i386 -T ${PROJECT_PATH}/scripts/kernel.ld -Map ${PROJECT_PATH}/build/kernel.map -nostdlib
+LIB = -I ${PROJECT_PATH}/include
 
 # compile flags
 CCFLAGS :=  $(LIB) -c -fno-builtin  \
                     -m32 -fno-stack-protector -nostdinc -fno-pic -gdwarf-2
 OBJCCFLAGS := $(CCFLAGS)
-ASFLAGS = --gstabs
+ASFLAGS =  -f elf -g -F stabs
 
 # recursive make and clean
 .PHONY: build-subdirs
